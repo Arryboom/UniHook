@@ -37,7 +37,16 @@ volatile int WriteAbsoluteCall(BYTE* Destination, DWORD64 JMPDestination)
 volatile int WritePUSHA(BYTE* Address)
 {
 	/*
-
+	push	rbx
+	push	rsp
+	push	rax
+	push	rcx
+	push	rdx
+	push	r8
+	push	r9
+	push	r10
+	push	r11
+	sub	rsp, 0x20
 	*/
 	BYTE X64PUSHFA[] = { 0x53, 0x54, 0x50, 0x51, 0x52, 0x41, 0x50, 0x41, 0x51, 0x41, 0x52, 0x41, 0x53, 0x48, 0x83, 0xEC, 0x20 };
 	memcpy(Address, X64PUSHFA, sizeof(X64PUSHFA));
@@ -47,7 +56,16 @@ volatile int WritePUSHA(BYTE* Address)
 volatile int WritePOPA(BYTE* Address)
 {
 	/*
-	
+	add rsp,0x20
+	pop r11
+	pop r10
+	pop r9
+	pop r8
+	pop rdx
+	pop rcx
+	pop rax
+	pop rsp
+	pop rbx
 	*/
 	BYTE X64POPFA[] = { 0x48, 0x83, 0xC4, 0x20, 0x41, 0x5B, 0x41, 0x5A, 0x41, 0x59, 0x41, 0x58, 0x5A, 0x59, 0x58, 0x5C, 0x5B };
 	memcpy(Address, X64POPFA, sizeof(X64POPFA));
@@ -73,6 +91,7 @@ volatile int WriteRetAddress(BYTE* Address, DWORD64 Destination)
 BYTE SHADOWSUB_ASM[] = { 0x48, 0x83, 0xEC, 0x28 };
 volatile int WriteSubShadowSpace(BYTE* Address)
 {
+	//sub rsp,0x28
 	memcpy(Address, SHADOWSUB_ASM, sizeof(SHADOWSUB_ASM));
 	return sizeof(SHADOWSUB_ASM);
 }
@@ -80,6 +99,7 @@ volatile int WriteSubShadowSpace(BYTE* Address)
 BYTE SHADOWADD_ASM[] = { 0x48, 0x83, 0xC4, 0x28 };
 volatile int WriteAddShadowSpace(BYTE* Address)
 {
+	//add rsp,0x28
 	memcpy(Address, SHADOWADD_ASM, sizeof(SHADOWADD_ASM));
 	return sizeof(SHADOWADD_ASM);
 }
