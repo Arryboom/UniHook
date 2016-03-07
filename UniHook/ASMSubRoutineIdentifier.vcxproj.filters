@@ -30,7 +30,7 @@
     <ClCompile Include="DissasemblyRoutines.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\PolyHook\PolyHook.cpp">
+    <ClCompile Include="..\PolyHook\PolyHook\PolyHook.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -41,9 +41,6 @@
     <ClInclude Include="Dissassembly\DissasemblyRoutines.h">
       <Filter>Header Files\Dissassembly</Filter>
     </ClInclude>
-    <ClInclude Include="..\PolyHook\PolyHook.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="HookHandler64.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -52,6 +49,9 @@
     </ClInclude>
     <ClInclude Include="PDB Query\PDBReader.h">
       <Filter>Header Files\PDB Query</Filter>
+    </ClInclude>
+    <ClInclude Include="..\PolyHook\PolyHook\PolyHook.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

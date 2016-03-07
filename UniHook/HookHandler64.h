@@ -2,12 +2,12 @@
 typedef void(__stdcall* tGeneric)();
 __declspec(noinline) void Interupt1()
 {
-	XTrace("[+] In Interupt1\n");
+	cPrint("[+] In Interupt1\n");
 }
 
 __declspec(noinline) void Interupt2()
 {
-	XTrace("[+] In Interupt2\n");
+	cPrint("[+] In Interupt2\n");
 }
 
 BYTE ABS_JMP_ASM[] = { 0x50, 0x48, 0xB8, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0x48, 0x87, 0x04, 0x24, 0xC3 };
@@ -127,7 +127,7 @@ void HookFunctionAtRuntime(BYTE* SubRoutineAddress, HookMethod Method)
 		});
 		((PLH::Detour*)Hook.get())->SetupHook((BYTE*)SubRoutineAddress, (BYTE*)Callback);
 		Hook->Hook();
-		Original = (DWORD64)((PLH::Detour*)Hook.get())->GetOriginal();
+		Original = ((PLH::Detour*)Hook.get())->GetOriginal<DWORD64>();
 	}
 	else if (Method == HookMethod::INT3_BP) {
 		Hook.reset(new PLH::VEHHook, [](PLH::VEHHook* Hook) {
@@ -136,7 +136,7 @@ void HookFunctionAtRuntime(BYTE* SubRoutineAddress, HookMethod Method)
 		});
 		((PLH::VEHHook*)Hook.get())->SetupHook((BYTE*)SubRoutineAddress, (BYTE*)Callback, PLH::VEHHook::VEHMethod::INT3_BP);
 		Hook->Hook();
-		Original = (DWORD64)((PLH::VEHHook*)Hook.get())->GetOriginal();
+		Original = ((PLH::VEHHook*)Hook.get())->GetOriginal<DWORD64>();
 	}
 
 	int WriteOffset = 0;
@@ -155,7 +155,7 @@ void HookFunctionAtRuntime(BYTE* SubRoutineAddress, HookMethod Method)
 
 	WriteOffset += WriteRET(Callback + WriteOffset);
 
-	XTrace("[+] Callback at: %I64X\n", Callback);
+	cPrint("[+] Callback at: %I64X\n", Callback);
 	m_Hooks.push_back(Hook);
 	m_Callbacks.push_back(Callback);
 }

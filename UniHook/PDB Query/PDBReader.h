@@ -16,7 +16,7 @@ PDBReader::PDBReader()
 {
 	m_InitOk = SymInitialize(GetCurrentProcess(), NULL, TRUE) ? true:false;
 	if(!m_InitOk)
-		XTrace("SymInit Failed\n");
+		cPrint("SymInit Failed\n");
 }
 
 bool PDBReader::LoadFile(const std::string& FilePath)

@@ -1,5 +1,5 @@
 #pragma once
-#include "../Capstone/include/capstone.h"
+#include "../PolyHook/Capstone/include/capstone.h"
 #pragma comment(lib,"capstone.lib")
 #include <vector>
 #include <Windows.h>

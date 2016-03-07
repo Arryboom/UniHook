@@ -29,7 +29,7 @@ std::string GetConsoleInput()
 	return stdbuff;
 }
 
-void XTrace(char* lpszFormat, ...)
+void cPrint(char* lpszFormat, ...)
 {
 	va_list args;
 	va_start(args, lpszFormat);

@@ -72,19 +72,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>../PolyHook/Capstone/x86/Debug;$(LibraryPath)</LibraryPath>
+    <LibraryPath>../PolyHook/Capstone/msvc/x86/Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>../PolyHook/Capstone/x64/Debug;$(LibraryPath)</LibraryPath>
+    <LibraryPath>../PolyHook/Capstone/msvc/x64/Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>../PolyHook/Capstone/x86/Release;$(LibraryPath)</LibraryPath>
+    <LibraryPath>../PolyHook/Capstone/msvc/x86/Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>../PolyHook/Capstone/x64/Release;$(LibraryPath)</LibraryPath>
+    <LibraryPath>../PolyHook/Capstone/msvc/x64/Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -154,7 +154,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\PolyHook\PolyHook.cpp" />
+    <ClCompile Include="..\PolyHook\PolyHook\PolyHook.cpp" />
     <ClCompile Include="DissasemblyRoutines.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
@@ -172,7 +172,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\PolyHook\PolyHook.h" />
+    <ClInclude Include="..\PolyHook\PolyHook\PolyHook.h" />
     <ClInclude Include="Dissassembly\DissasemblyRoutines.h" />
     <ClInclude Include="HookHandler64.h" />
     <ClInclude Include="HookHandler86.h" />

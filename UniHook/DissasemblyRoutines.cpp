@@ -1,5 +1,5 @@
 #include "Dissassembly/DissasemblyRoutines.h"
-void XTrace(char* lpszFormat, ...);
+void cPrint(char* lpszFormat, ...);
 InstructionSearcher::InstructionSearcher()
 {
 #ifdef _WIN64
@@ -57,6 +57,6 @@ std::vector<SearchResult> InstructionSearcher::SearchForInstruction(INSType Type
 void InstructionSearcher::InitCapstone(cs_mode Mode)
 {
 	if (cs_open(CS_ARCH_X86, Mode, &m_CapstoneHandle) != CS_ERR_OK)
-		XTrace("[+]Error Initializing Capstone\n");
+		cPrint("[+]Error Initializing Capstone\n");
 	cs_option(m_CapstoneHandle, CS_OPT_DETAIL, CS_OPT_ON);
 }
