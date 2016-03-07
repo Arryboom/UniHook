@@ -104,8 +104,14 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	case DLL_PROCESS_ATTACH:
 		CloseHandle(CreateThread(NULL, NULL, InitThread, NULL, NULL, NULL));
 	case DLL_THREAD_ATTACH:
+		
 	case DLL_THREAD_DETACH:
 	case DLL_PROCESS_DETACH:
+		for (int i = 0; i < m_Callbacks.size();i++)
+		{
+			delete[] m_Callbacks[i];
+		}
+		m_Callbacks.clear();
 		break;
 	}
 	return TRUE;
