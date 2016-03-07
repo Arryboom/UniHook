@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "Tools.h"
 #include "Dissassembly/DissasemblyRoutines.h"
-#include "../PolyHook/PolyHook.h"
+#include "../PolyHook/PolyHook/PolyHook.h"
 #include "PDB Query/PDBReader.h"
 
 InstructionSearcher m_InsSearcher;

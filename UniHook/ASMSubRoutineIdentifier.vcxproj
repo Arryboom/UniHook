@@ -72,23 +72,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>../Capstone/x86/Debug;$(LibraryPath);D:\Programs\Visual Studio 2015\DIA SDK\lib;D:\Programs\Visual Studio 2015\DIA SDK\lib</LibraryPath>
-    <IncludePath>D:\Programs\Visual Studio 2015\DIA SDK\include;$(IncludePath)</IncludePath>
+    <LibraryPath>../PolyHook/Capstone/x86/Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>../Capstone/x64/Debug;$(LibraryPath);D:\Programs\Visual Studio 2015\DIA SDK\lib;D:\Programs\Visual Studio 2015\DIA SDK\lib</LibraryPath>
-    <IncludePath>D:\Programs\Visual Studio 2015\DIA SDK\include;$(IncludePath)</IncludePath>
+    <LibraryPath>../PolyHook/Capstone/x64/Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>../Capstone/x86/Release;$(LibraryPath);D:\Programs\Visual Studio 2015\DIA SDK\lib;D:\Programs\Visual Studio 2015\DIA SDK\lib</LibraryPath>
-    <IncludePath>D:\Programs\Visual Studio 2015\DIA SDK\include;$(IncludePath)</IncludePath>
+    <LibraryPath>../PolyHook/Capstone/x86/Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>../Capstone/x64/Release;$(LibraryPath);D:\Programs\Visual Studio 2015\DIA SDK\lib;D:\Programs\Visual Studio 2015\DIA SDK\lib</LibraryPath>
-    <IncludePath>D:\Programs\Visual Studio 2015\DIA SDK\include;$(IncludePath)</IncludePath>
+    <LibraryPath>../PolyHook/Capstone/x64/Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
