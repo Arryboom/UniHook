@@ -31,6 +31,7 @@ bool Injector::Inject(const std::wstring& DllPath)
 	if (m_Target == NULL)
 		return false;
 
+	//Allocate space in target to hold dll path
 	size_t PathLength = wcslen(DllPath.c_str()) * sizeof(wchar_t);
 	void* Mem = VirtualAllocEx(m_Target, NULL, PathLength, MEM_COMMIT, PAGE_READWRITE);
 	auto FreePathMem = finally([&]() {
@@ -39,6 +40,7 @@ bool Injector::Inject(const std::wstring& DllPath)
 	if (Mem == NULL)
 		return false;
 
+	//Write dll path into the allocated mem
 	if (WriteProcessMemory(m_Target, Mem, DllPath.c_str(), PathLength, NULL) == FALSE)
 		return false;
 

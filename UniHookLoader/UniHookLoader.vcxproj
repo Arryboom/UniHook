@@ -153,6 +153,7 @@
     <ClCompile Include="UniHookLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CmdLineParser.h" />
     <ClInclude Include="Injector.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

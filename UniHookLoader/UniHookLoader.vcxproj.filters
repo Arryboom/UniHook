@@ -29,5 +29,8 @@
     <ClInclude Include="Injector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CmdLineParser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
