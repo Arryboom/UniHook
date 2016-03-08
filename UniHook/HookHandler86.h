@@ -88,5 +88,5 @@ void HookFunctionAtRuntime(BYTE* SubRoutineAddress,HookMethod Method)
 
 	cPrint("[+] Callback at: %p\n", Callback);
 	m_Hooks.push_back(Hook);
-	m_Callbacks.push_back(Callback);
+	//m_Callbacks.push_back(Callback);
 }
