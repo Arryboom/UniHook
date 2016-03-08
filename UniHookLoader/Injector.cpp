@@ -28,6 +28,9 @@ bool Injector::OpenTarget(const std::wstring& ProcessName)
 
 bool Injector::Inject(const std::wstring& DllPath)
 {
+	if (m_Target == NULL)
+		return false;
+
 	size_t PathLength = wcslen(DllPath.c_str()) * sizeof(wchar_t);
 	void* Mem = VirtualAllocEx(m_Target, NULL, PathLength, MEM_COMMIT, PAGE_READWRITE);
 	auto FreePathMem = finally([&]() {
