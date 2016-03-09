@@ -7,3 +7,6 @@ This is an example project on how to use PolyHook to intercept ANY arbitrary fun
 It allocates a callback at runtime that PolyHook redirects the hooked function to. This callback is filled with assembly at runtime that will handle executing the intercepts, and the original function. This is done by first storing all registers, calling the intercept, and restoring the registers, then it calls the original function, and repeats the register storing and poping before it calls the second interupt and returns to the caller of the hooked function.
 
 Caller->Store Regs->Interupt1->Restore Regs->Original Hooked Func->Store Regs->Interupt2->Restore Regs->Return to Caller
+
+#LICENSE
+MIT
