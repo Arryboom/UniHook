@@ -64,7 +64,7 @@ __declspec(noinline) volatile void FindSubRoutines()
 DWORD WINAPI InitThread(LPVOID lparam)
 {
 	CreateConsole();
-	SharedMemeQueue MemClient("UniHook_IPC", 1024, SharedMemeQueue::Mode::Client);
+	SharedMemeQueue MemClient("Local\\UniHook_IPC", 1024, SharedMemeQueue::Mode::Client);
 	MemMessage Msg;
 	MemClient.PopMessage(Msg);
 	printf("%s\n", Msg.m_Data);

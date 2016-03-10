@@ -63,9 +63,12 @@ SharedMemeQueue::SharedMemeQueue(const std::string& ServerName,const DWORD BufSi
 		return;
 	}
 
-	SharedMemQHeader* Queue = (SharedMemQHeader*)m_Buffer;
-	Queue->m_MessageCount = 0;
-	Queue->m_OffsetToEndOfLastMessage = 0;
+	if (Type == Mode::Server)
+	{
+		SharedMemQHeader* Queue = (SharedMemQHeader*)m_Buffer;
+		Queue->m_MessageCount = 0;
+		Queue->m_OffsetToEndOfLastMessage = 0;
+	}
 }
 
 SharedMemeQueue::~SharedMemeQueue()

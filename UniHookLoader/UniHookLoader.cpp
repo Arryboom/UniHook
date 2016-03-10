@@ -13,7 +13,7 @@ enum Options
 
 int main(int argc,char* argv[])
 {
-	SharedMemeQueue MemServer("UniHook_IPC", 1024,SharedMemeQueue::Mode::Server);
+	SharedMemeQueue MemServer("Local\\UniHook_IPC", 1024,SharedMemeQueue::Mode::Server);
 	if (!MemServer.PushMessage((BYTE*)std::string("Message").c_str()))
 		printf("Failed to write message\n");
 
