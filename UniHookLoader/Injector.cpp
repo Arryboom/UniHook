@@ -5,6 +5,11 @@ Injector::Injector()
 
 }
 
+Injector::~Injector()
+{
+	CloseHandle(m_Target);
+}
+
 bool Injector::OpenTarget(DWORD PID)
 {
 	m_Target = OpenProcess(PROCESS_ALL_ACCESS, FALSE, PID);
@@ -55,7 +60,7 @@ bool Injector::Inject(const std::wstring& DllPath)
 	if (hThread == NULL)
 		return false;
 
-	DWORD WaitState =WaitForSingleObject(hThread, 5000);
+	DWORD WaitState = WaitForSingleObject(hThread, 5000);
 	CloseHandle(hThread);
 	return (WaitState == WAIT_OBJECT_0) ? true:false;
 }
@@ -82,5 +87,6 @@ std::vector<Process> Injector::GetProcessList()
 
 		Processes.push_back(Proc);
 	}
+	CloseHandle(thSnapShot);
 	return Processes;
 }
