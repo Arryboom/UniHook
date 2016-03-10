@@ -6,6 +6,7 @@
 #include "../PolyHook/PolyHook/PolyHook.h"
 #include "Dissassembly/DissasemblyRoutines.h"
 #include "PDB Query/PDBReader.h"
+#include "../UniHookLoader/SharedMemeQueue.h"
 
 InstructionSearcher m_InsSearcher;
 std::vector<std::shared_ptr<PLH::IHook>> m_Hooks;
@@ -63,7 +64,10 @@ __declspec(noinline) volatile void FindSubRoutines()
 DWORD WINAPI InitThread(LPVOID lparam)
 {
 	CreateConsole();
-
+	SharedMemeQueue MemClient("UniHook_IPC", 1024, SharedMemeQueue::Mode::Client);
+	MemMessage Msg;
+	MemClient.PopMessage(Msg);
+	printf("%s\n", Msg.m_Data);
 	//m_PDBReader.LoadFile("C:\\Users\\Steve\\Desktop\\Testing.pdb");
 
 	FindSubRoutines();

@@ -32,5 +32,8 @@
     <ClInclude Include="CmdLineParser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SharedMemeQueue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -3,7 +3,7 @@
 #include <Windows.h>
 #include "Injector.h"
 #include "CmdLineParser.h"
-
+#include "SharedMemeQueue.h"
 enum Options
 {
 	OpenProc,
@@ -13,6 +13,10 @@ enum Options
 
 int main(int argc,char* argv[])
 {
+	SharedMemeQueue MemServer("UniHook_IPC", 1024,SharedMemeQueue::Mode::Server);
+	if (!MemServer.PushMessage((BYTE*)std::string("Message").c_str()))
+		printf("Failed to write message\n");
+
 	Injector WindowsInjector;
 	CmdLineParser Parser(argc, argv);
 	Parser.RegisterArgs(Options::OpenProc,"-p", "-openproc", Parameter::STRING);
@@ -32,6 +36,7 @@ int main(int argc,char* argv[])
 			printf("-openproc -p <Name of process.exe>\n"
 				"-inject   -i <Path to dll, include .dll>\n");
 	}
+	Sleep(10000);
     return 0;
 }
 
