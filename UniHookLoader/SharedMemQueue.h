@@ -18,7 +18,7 @@ struct SharedMemQHeader
 	DWORD m_MessageCount;
 };
 
-class SharedMemeQueue
+class SharedMemQueue
 {
 public:
 	enum class Mode
@@ -26,8 +26,8 @@ public:
 		Server,
 		Client
 	};
-	SharedMemeQueue(const std::string& ServerName,const DWORD BufSize,Mode Type);
-	~SharedMemeQueue();
+	SharedMemQueue(const std::string& ServerName,const DWORD BufSize,Mode Type);
+	~SharedMemQueue();
 	bool PushMessage(MemMessage Msg);
 	bool PopMessage(MemMessage& Msg);
 	DWORD GetMessageCount() const;
@@ -37,7 +37,7 @@ private:
 	bool m_InitOk;
 };
 
-SharedMemeQueue::SharedMemeQueue(const std::string& ServerName,const DWORD BufSize,Mode Type)
+SharedMemQueue::SharedMemQueue(const std::string& ServerName,const DWORD BufSize,Mode Type)
 {
 	m_InitOk = true;
 
@@ -71,13 +71,13 @@ SharedMemeQueue::SharedMemeQueue(const std::string& ServerName,const DWORD BufSi
 	}
 }
 
-SharedMemeQueue::~SharedMemeQueue()
+SharedMemQueue::~SharedMemQueue()
 {
 	UnmapViewOfFile(m_Buffer);
 	CloseHandle(m_hMappedFile);
 }
 
-bool SharedMemeQueue::PushMessage(MemMessage Msg)
+bool SharedMemQueue::PushMessage(MemMessage Msg)
 {
 	if (!m_InitOk)
 		return false;
@@ -89,7 +89,7 @@ bool SharedMemeQueue::PushMessage(MemMessage Msg)
 	return true;
 }
 
-bool SharedMemeQueue::PopMessage(MemMessage& Msg)
+bool SharedMemQueue::PopMessage(MemMessage& Msg)
 {
 	if (!m_InitOk)
 		return false;
@@ -103,7 +103,7 @@ bool SharedMemeQueue::PopMessage(MemMessage& Msg)
 	return true;
 }
 
-DWORD SharedMemeQueue::GetMessageCount() const
+DWORD SharedMemQueue::GetMessageCount() const
 {
 	if (!m_InitOk)
 		return 0;

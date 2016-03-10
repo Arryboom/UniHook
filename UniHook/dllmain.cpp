@@ -6,7 +6,7 @@
 #include "../PolyHook/PolyHook/PolyHook.h"
 #include "Dissassembly/DissasemblyRoutines.h"
 #include "PDB Query/PDBReader.h"
-#include "../UniHookLoader/SharedMemeQueue.h"
+#include "../UniHookLoader/SharedMemQueue.h"
 
 InstructionSearcher m_InsSearcher;
 std::vector<std::shared_ptr<PLH::IHook>> m_Hooks;

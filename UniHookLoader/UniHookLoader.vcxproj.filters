@@ -32,7 +32,7 @@
     <ClInclude Include="CmdLineParser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SharedMemeQueue.h">
+    <ClInclude Include="SharedMemQueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

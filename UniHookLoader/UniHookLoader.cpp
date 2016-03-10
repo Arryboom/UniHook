@@ -3,7 +3,7 @@
 #include <Windows.h>
 #include "Injector.h"
 #include "CmdLineParser.h"
-#include "SharedMemeQueue.h"
+#include "SharedMemQueue.h"
 enum Options
 {
 	OpenProc,
@@ -13,7 +13,7 @@ enum Options
 
 int main(int argc,char* argv[])
 {
-	SharedMemeQueue MemServer("Local\\UniHook_IPC", 1024,SharedMemeQueue::Mode::Server);
+	SharedMemQueue MemServer("Local\\UniHook_IPC", 1024,SharedMemQueue::Mode::Server);
 	if (!MemServer.PushMessage((BYTE*)std::string("Message").c_str()))
 		printf("Failed to write message\n");
 
