@@ -1,5 +1,6 @@
 #pragma once
 #include "SharedMemMutex.h"
+#include "SharedMemScopedLock.h"
 struct MemMessage
 {
 	MemMessage(BYTE* Data)
@@ -85,16 +86,12 @@ bool SharedMemQueue::PushMessage(MemMessage Msg)
 	if (!m_InitOk)
 		return false;
 
-	if (!m_Mutex.Lock())
-		return false;
+	SharedMemScopedLock Lock(m_Mutex);
 
 	SharedMemQHeader* Queue = (SharedMemQHeader*)m_Buffer;
 	memcpy(m_Buffer + sizeof(SharedMemQHeader) + Queue->m_OffsetToEndOfLastMessage, Msg.m_Data, sizeof(MemMessage));
 	Queue->m_OffsetToEndOfLastMessage += sizeof(MemMessage);
 	Queue->m_MessageCount++;
-	
-	if (!m_Mutex.Release())
-		return false;
 	return true;
 }
 
@@ -103,22 +100,15 @@ bool SharedMemQueue::PopMessage(MemMessage& Msg)
 	if (!m_InitOk)
 		return false;
 
-	if (!m_Mutex.Lock())
-		return false;
+	SharedMemScopedLock Lock(m_Mutex);
 
 	SharedMemQHeader* Queue = (SharedMemQHeader*)m_Buffer;
 	if (Queue->m_MessageCount < 1)
-	{
-		m_Mutex.Release();
 		return false;
-	}
 
 	memcpy(Msg.m_Data, m_Buffer + sizeof(SharedMemQHeader) + Queue->m_OffsetToEndOfLastMessage - sizeof(MemMessage), sizeof(MemMessage));
 	Queue->m_OffsetToEndOfLastMessage -= sizeof(MemMessage);
 	Queue->m_MessageCount--;
-	
-	if (!m_Mutex.Release())
-		return false;
 
 	return true;
 }
@@ -128,6 +118,7 @@ DWORD SharedMemQueue::GetMessageCount() const
 	if (!m_InitOk)
 		return 0;
 
+	SharedMemScopedLock Lock(m_Mutex);
 	SharedMemQHeader* Queue = (SharedMemQHeader*)m_Buffer;
 	return Queue->m_MessageCount;
 }

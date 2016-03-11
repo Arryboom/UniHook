@@ -157,6 +157,7 @@
     <ClInclude Include="Injector.h" />
     <ClInclude Include="SharedMemMutex.h" />
     <ClInclude Include="SharedMemQueue.h" />
+    <ClInclude Include="SharedMemScopedLock.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
