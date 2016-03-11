@@ -85,12 +85,16 @@ bool SharedMemQueue::PushMessage(MemMessage Msg)
 	if (!m_InitOk)
 		return false;
 
-	m_Mutex.Lock();
+	if (!m_Mutex.Lock())
+		return false;
+
 	SharedMemQHeader* Queue = (SharedMemQHeader*)m_Buffer;
 	memcpy(m_Buffer + sizeof(SharedMemQHeader) + Queue->m_OffsetToEndOfLastMessage, Msg.m_Data, sizeof(MemMessage));
 	Queue->m_OffsetToEndOfLastMessage += sizeof(MemMessage);
 	Queue->m_MessageCount++;
-	m_Mutex.Release();
+	
+	if (!m_Mutex.Release())
+		return false;
 	return true;
 }
 
@@ -99,15 +103,23 @@ bool SharedMemQueue::PopMessage(MemMessage& Msg)
 	if (!m_InitOk)
 		return false;
 
-	m_Mutex.Lock();
+	if (!m_Mutex.Lock())
+		return false;
+
 	SharedMemQHeader* Queue = (SharedMemQHeader*)m_Buffer;
 	if (Queue->m_MessageCount < 1)
+	{
+		m_Mutex.Release();
 		return false;
+	}
 
 	memcpy(Msg.m_Data, m_Buffer + sizeof(SharedMemQHeader) + Queue->m_OffsetToEndOfLastMessage - sizeof(MemMessage), sizeof(MemMessage));
 	Queue->m_OffsetToEndOfLastMessage -= sizeof(MemMessage);
 	Queue->m_MessageCount--;
-	m_Mutex.Release();
+	
+	if (!m_Mutex.Release())
+		return false;
+
 	return true;
 }
 

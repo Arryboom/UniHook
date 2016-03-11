@@ -37,6 +37,9 @@ SharedMemMutex::~SharedMemMutex()
 
 bool SharedMemMutex::Lock()
 {
+	if (!m_InitOk)
+		return false;
+
 	//Blocks until it has ownership
 	DWORD Result = WaitForSingleObject(m_hMutex, INFINITE);
 	if (Result == WAIT_OBJECT_0)
@@ -46,6 +49,9 @@ bool SharedMemMutex::Lock()
 
 bool SharedMemMutex::Release()
 {
+	if (!m_InitOk)
+		return false;
+
 	if (ReleaseMutex(m_hMutex) != NULL)
 		return true;
 	return false;
