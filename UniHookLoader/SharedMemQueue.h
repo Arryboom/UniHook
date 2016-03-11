@@ -22,10 +22,10 @@ struct SharedMemQHeader
 class SharedMemQueue
 {
 public:
-	enum Mode
+	enum class Mode
 	{
-		Server = 0,
-		Client = 1
+		Server ,
+		Client
 	};
 	SharedMemQueue(const std::string& ServerName,const DWORD BufSize,Mode Type);
 	~SharedMemQueue();
@@ -40,7 +40,7 @@ private:
 };
 
 SharedMemQueue::SharedMemQueue(const std::string& ServerName,const DWORD BufSize,Mode Type) : 
-	m_Mutex(std::string(ServerName + "_MTX"),(SharedMemMutex::Mode)Type)
+	m_Mutex(std::string(ServerName + "_MTX"),(Type == Mode::Server) ? SharedMemMutex::Mode::Server : SharedMemMutex::Mode::Client)
 {
 	m_InitOk = true;
 

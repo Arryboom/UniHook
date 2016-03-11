@@ -3,10 +3,10 @@
 class SharedMemMutex
 {
 public:
-	enum Mode
+	enum class Mode
 	{
-		Server = 0,
-		Client = 1
+		Server ,
+		Client
 	};
 	SharedMemMutex(const std::string& Name, Mode Type);
 	~SharedMemMutex();
