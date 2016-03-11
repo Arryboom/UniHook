@@ -155,6 +155,7 @@
   <ItemGroup>
     <ClInclude Include="CmdLineParser.h" />
     <ClInclude Include="Injector.h" />
+    <ClInclude Include="SharedMemMutex.h" />
     <ClInclude Include="SharedMemQueue.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
