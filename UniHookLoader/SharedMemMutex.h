@@ -10,8 +10,8 @@ public:
 	};
 	SharedMemMutex(const std::string& Name, Mode Type);
 	~SharedMemMutex();
-	bool Lock();
-	bool Release();
+	bool lock();
+	bool unlock();
 private:
 	HANDLE m_hMutex;
 	bool m_InitOk;
@@ -32,10 +32,12 @@ SharedMemMutex::SharedMemMutex(const std::string& Name, Mode Type)
 
 SharedMemMutex::~SharedMemMutex()
 {
+	if (!m_InitOk)
+		return;
 	CloseHandle(m_hMutex);
 }
 
-bool SharedMemMutex::Lock()
+bool SharedMemMutex::lock()
 {
 	if (!m_InitOk)
 		return false;
@@ -47,7 +49,7 @@ bool SharedMemMutex::Lock()
 	return false;
 }
 
-bool SharedMemMutex::Release()
+bool SharedMemMutex::unlock()
 {
 	if (!m_InitOk)
 		return false;

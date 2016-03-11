@@ -35,6 +35,8 @@ class CmdLineParser
 {
 public:
 	CmdLineParser(int ArgCount, char** Args);
+	void ResetArguments(int ArgCount, char** Args);
+	void ResetArguments(const std::vector<std::string>& Args);
 	void RegisterArgs(DWORD EnumID,const std::string& ShortName, const std::string& LongName, Parameter Param);
 	void Parse();
 	std::vector<Command> GetFoundArgs();
@@ -49,6 +51,24 @@ CmdLineParser::CmdLineParser(int ArgCount, char** Args)
 	for (int i = 0; i < ArgCount; i++)
 	{
 		m_Args.push_back(Args[i]);
+	}
+}
+
+void CmdLineParser::ResetArguments(int ArgCount, char** Args)
+{
+	m_Args.clear();
+	for (int i = 0; i < ArgCount; i++)
+	{
+		m_Args.push_back(Args[i]);
+	}
+}
+
+void CmdLineParser::ResetArguments(const std::vector<std::string>& Args)
+{
+	m_Args.clear();
+	for (std::string Arg : Args)
+	{	
+		m_Args.push_back(Arg.c_str());
 	}
 }
 
@@ -73,23 +93,27 @@ void CmdLineParser::Parse()
 			std::string LongName = m_RegisteredArgs[j].m_LongName;
 			if(ShortName != Arg && LongName != Arg)
 				continue;
+		
+			//Make a copy
+			Command FoundCommand = m_RegisteredArgs[j];
 
-			if (m_RegisteredArgs[j].m_Param == Parameter::NONE)
+			if (FoundCommand.m_Param == Parameter::NONE)
 			{
-				m_FoundArgs.push_back(m_RegisteredArgs[j]);
+				m_FoundArgs.push_back(FoundCommand);
 				continue;
 			}
 
+			//Next Index is a parameter
 			if (++i >= m_Args.size())
 			{
-				m_RegisteredArgs[j].m_ParamOut = "";
-				m_FoundArgs.push_back(m_RegisteredArgs[j]);
+				FoundCommand.m_ParamOut = "";
+				m_FoundArgs.push_back(FoundCommand);
 				continue;
 			}
 			Arg = m_Args[i];
 
-			m_RegisteredArgs[j].m_ParamOut = Arg;
-			m_FoundArgs.push_back(m_RegisteredArgs[j]);
+			FoundCommand.m_ParamOut = Arg;
+			m_FoundArgs.push_back(FoundCommand);
 		}
 	}
 }

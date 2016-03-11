@@ -66,9 +66,28 @@ DWORD WINAPI InitThread(LPVOID lparam)
 	CreateConsole();
 	SharedMemQueue MemClient("Local\\UniHook_IPC", 1024, SharedMemQueue::Mode::Client);
 	MemMessage Msg;
-	MemClient.PopMessage(Msg);
-	printf("%s\n", Msg.m_Data);
+	if (MemClient.PopMessage(Msg))
+		printf("%s\n", Msg.m_Data);
+	else
+		printf("[+] IPC FAILED\n");
+
 	//m_PDBReader.LoadFile("C:\\Users\\Steve\\Desktop\\Testing.pdb");
+
+	do 
+	{
+		MemMessage Msg;
+		if (!MemClient.PopMessage(Msg))
+		{
+			Sleep(10);
+			continue;
+		}
+		std::string Cmd((char*)Msg.m_Data, sizeof(MemMessage));
+		if (strcmp(Cmd.c_str(), "ListSubs") == 0)
+		{
+			cPrint("[+] Executing Command: %s\n", Cmd.c_str());
+			FindSubRoutines();
+		}
+	} while (1);
 
 	FindSubRoutines();
 	cPrint("[+] 1) Enter an index to hook that function\n");

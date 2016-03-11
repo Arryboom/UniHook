@@ -1,6 +1,6 @@
 #pragma once
 #include "SharedMemMutex.h"
-#include "SharedMemScopedLock.h"
+#include <mutex>
 struct MemMessage
 {
 	MemMessage(BYTE* Data)
@@ -34,7 +34,7 @@ public:
 	bool PopMessage(MemMessage& Msg);
 	DWORD GetMessageCount() const;
 private:
-	SharedMemMutex m_Mutex;
+	mutable SharedMemMutex m_Mutex;
 	BYTE* m_Buffer;
 	HANDLE m_hMappedFile;
 	bool m_InitOk;
@@ -86,7 +86,7 @@ bool SharedMemQueue::PushMessage(MemMessage Msg)
 	if (!m_InitOk)
 		return false;
 
-	SharedMemScopedLock Lock(m_Mutex);
+	std::lock_guard<SharedMemMutex> Lock(m_Mutex);
 
 	SharedMemQHeader* Queue = (SharedMemQHeader*)m_Buffer;
 	memcpy(m_Buffer + sizeof(SharedMemQHeader) + Queue->m_OffsetToEndOfLastMessage, Msg.m_Data, sizeof(MemMessage));
@@ -100,7 +100,7 @@ bool SharedMemQueue::PopMessage(MemMessage& Msg)
 	if (!m_InitOk)
 		return false;
 
-	SharedMemScopedLock Lock(m_Mutex);
+	std::lock_guard<SharedMemMutex> Lock(m_Mutex);
 
 	SharedMemQHeader* Queue = (SharedMemQHeader*)m_Buffer;
 	if (Queue->m_MessageCount < 1)
@@ -118,7 +118,7 @@ DWORD SharedMemQueue::GetMessageCount() const
 	if (!m_InitOk)
 		return 0;
 
-	SharedMemScopedLock Lock(m_Mutex);
+	std::lock_guard<SharedMemMutex> Lock(m_Mutex);
 	SharedMemQHeader* Queue = (SharedMemQHeader*)m_Buffer;
 	return Queue->m_MessageCount;
 }

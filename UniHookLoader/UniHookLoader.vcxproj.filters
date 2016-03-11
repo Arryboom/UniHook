@@ -41,8 +41,5 @@
     <ClInclude Include="SharedMemMutex.h">
       <Filter>Header Files\IPC</Filter>
     </ClInclude>
-    <ClInclude Include="SharedMemScopedLock.h">
-      <Filter>Header Files\IPC</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>
