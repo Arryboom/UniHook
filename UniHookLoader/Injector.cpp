@@ -5,6 +5,11 @@ Injector::Injector()
 
 }
 
+Injector::~Injector()
+{
+	CloseHandle(m_Target);
+}
+
 bool Injector::OpenTarget(DWORD PID)
 {
 	m_Target = OpenProcess(PROCESS_ALL_ACCESS, FALSE, PID);
@@ -44,7 +49,7 @@ bool Injector::Inject(const std::wstring& DllPath)
 	if (WriteProcessMemory(m_Target, Mem, DllPath.c_str(), PathLength, NULL) == FALSE)
 		return false;
 
-	void* LoadLibAddr = GetProcAddress(GetModuleHandle(L"kernel32.dll"), "LoadLibraryW");
+	void* LoadLibAddr = GetProcAddress(GetModuleHandle("kernel32.dll"), "LoadLibraryW");
 	if (LoadLibAddr == NULL)
 		return false;
 
@@ -55,14 +60,14 @@ bool Injector::Inject(const std::wstring& DllPath)
 	if (hThread == NULL)
 		return false;
 
-	DWORD WaitState =WaitForSingleObject(hThread, 5000);
+	DWORD WaitState = WaitForSingleObject(hThread, 5000);
 	CloseHandle(hThread);
 	return (WaitState == WAIT_OBJECT_0) ? true:false;
 }
 
 std::vector<Process> Injector::GetProcessList()
 {
-	PROCESSENTRY32 pe;
+	PROCESSENTRY32W pe;
 	HANDLE thSnapShot;
 	BOOL CurProc, ProcFound = false;
 	std::vector<Process> Processes;
@@ -72,9 +77,9 @@ std::vector<Process> Injector::GetProcessList()
 	{
 		return Processes;
 	}
-	pe.dwSize = sizeof(PROCESSENTRY32);
+	pe.dwSize = sizeof(PROCESSENTRY32W);
 
-	for (CurProc = Process32First(thSnapShot, &pe); CurProc; CurProc = Process32Next(thSnapShot, &pe))
+	for (CurProc = Process32FirstW(thSnapShot, &pe); CurProc; CurProc = Process32NextW(thSnapShot, &pe))
 	{
 		Process Proc;
 		Proc.m_PID = pe.th32ProcessID;
@@ -82,5 +87,6 @@ std::vector<Process> Injector::GetProcessList()
 
 		Processes.push_back(Proc);
 	}
+	CloseHandle(thSnapShot);
 	return Processes;
 }

@@ -12,6 +12,7 @@ class Injector
 {
 public:
 	Injector();
+	~Injector();
 	bool OpenTarget(DWORD PID);
 	bool OpenTarget(const std::wstring& ProcessName);
 	bool Inject(const std::wstring& DllPath);

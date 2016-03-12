@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\Common">
+      <UniqueIdentifier>{79fd5fd8-fb1d-4207-a3f1-c8a7e067d38d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Common\IPC">
+      <UniqueIdentifier>{65dcfaf1-2c32-4cfb-8bbf-40cf5f03831b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -31,6 +37,15 @@
     </ClInclude>
     <ClInclude Include="CmdLineParser.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\IPC\SharedMemMutex.h">
+      <Filter>Header Files\Common\IPC</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\IPC\SharedMemQueue.h">
+      <Filter>Header Files\Common\IPC</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Utilities.h">
+      <Filter>Header Files\Common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

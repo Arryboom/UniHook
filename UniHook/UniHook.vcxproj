@@ -172,6 +172,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Common\IPC\SharedMemMutex.h" />
+    <ClInclude Include="..\Common\IPC\SharedMemQueue.h" />
+    <ClInclude Include="..\Common\Utilities.h" />
     <ClInclude Include="..\PolyHook\PolyHook\PolyHook.h" />
     <ClInclude Include="Dissassembly\DissasemblyRoutines.h" />
     <ClInclude Include="HookHandler64.h" />

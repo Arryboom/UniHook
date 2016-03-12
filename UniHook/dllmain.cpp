@@ -6,6 +6,8 @@
 #include "../PolyHook/PolyHook/PolyHook.h"
 #include "Dissassembly/DissasemblyRoutines.h"
 #include "PDB Query/PDBReader.h"
+#include "../Common/IPC/SharedMemQueue.h"
+#include "../Common/Utilities.h"
 
 InstructionSearcher m_InsSearcher;
 std::vector<std::shared_ptr<PLH::IHook>> m_Hooks;
@@ -63,35 +65,58 @@ __declspec(noinline) volatile void FindSubRoutines()
 DWORD WINAPI InitThread(LPVOID lparam)
 {
 	CreateConsole();
+	SharedMemQueue MemClient("Local\\UniHook_IPC", 1024, SharedMemQueue::Mode::Client);
+	MemMessage Msg;
+	if (MemClient.PopMessage(Msg))
+		printf("%s\n", Msg.m_Data);
+	else
+		printf("[+] IPC FAILED\n");
 
 	//m_PDBReader.LoadFile("C:\\Users\\Steve\\Desktop\\Testing.pdb");
 
-	FindSubRoutines();
-	cPrint("[+] 1) Enter an index to hook that function\n");
-	cPrint("[+] or 2) Enter the address of a function in hex format 0x........\n");
-	cPrint("Make a Selection (Enter 1 or 2): ");
-	int Option = atoi(GetConsoleInput().c_str());
-	if (Option == 1)
+	do 
 	{
-		cPrint("[+] Enter the index of the function:");
-		int Selection = atoi(GetConsoleInput().c_str());
-		if (Selection > Results.size())
-			cPrint("[+] Input index is invalid\n");
-		else
-			cPrint("[+] Hooking Function:%d\n", Selection);
+		//Check if we have a message
+		MemMessage Msg;
+		if (!MemClient.PopMessage(Msg))
+		{
+			Sleep(10);
+			continue;
+		}
 
-		HookFunctionAtRuntime((BYTE*)Results[Selection].GetCallDestination(),HookMethod::INLINE);
-	}else if (Option == 2) {
-		cPrint("[+] Enter the address of the function:");
+		//Convert message to string
+		std::string Cmd((char*)Msg.m_Data, sizeof(MemMessage));
+		if (strcmp(Cmd.c_str(), "ListSubs") == 0)
+		{
+			cPrint("[+] Executing Command: %s\n", Cmd.c_str());
+			FindSubRoutines();
+		}
+
+		//These types of messages have two parts, split by :
+		std::vector<std::string> SplitCmd = split(Cmd, ":");
+		if (SplitCmd.size() == 2)
+		{
+			if (strcmp(SplitCmd[0].c_str(), "HookAtIndex") == 0)
+			{
+				if (Results.size() < 1)
+					FindSubRoutines();
+
+				int Index = atoi(SplitCmd[1].c_str());
+				cPrint("[+] Hooking Function at index:%d\n", Index);
+				HookFunctionAtRuntime((BYTE*)Results[Index].GetCallDestination(), HookMethod::INLINE);
+			}
+			else if (strcmp(SplitCmd[0].c_str(), "HookAtAddr") == 0)
+			{
 #ifdef _WIN64
-		DWORD64 Address = strtoll(GetConsoleInput().c_str(), NULL, 16);
+				DWORD64 Address = strtoll(SplitCmd[1].c_str(), NULL, 16);
 #else
-		DWORD Address = strtol(GetConsoleInput().c_str(), NULL, 16);
+				DWORD Address = strtol(SplitCmd[1].c_str(), NULL, 16);
 #endif
-		cPrint("[+] Hooking Function:%p\n",Address);
-		HookFunctionAtRuntime((BYTE*)Address,HookMethod::INLINE);
-	}
-	cPrint("[+] Function is hooked\n");
+				cPrint("[+] Hooking Function:%p\n", Address);
+				HookFunctionAtRuntime((BYTE*)Address, HookMethod::INLINE);
+			}
+		}
+	} while (1);
 	return 1;
 }
 
