@@ -3,10 +3,9 @@
 #include <Windows.h>
 #include "Injector.h"
 #include "CmdLineParser.h"
-#include "SharedMemQueue.h"
+#include "../Common/IPC/SharedMemQueue.h"
+#include "../Common/Utilities.h"
 #include <iostream>
-#include <sstream>
-#include <iterator>
 enum Options
 {
 	OpenProc,
@@ -17,14 +16,6 @@ enum Options
 	Exit,
 	Help
 };
-
-std::vector<std::string> split(const std::string &s) 
-{
-	std::istringstream buf(s);
-	std::istream_iterator<std::string> beg(buf), end;
-	std::vector<std::string> tokens(beg, end);
-	return tokens;
-}
 
 //Shared memory IPC mechanism to talk to our injected DLL
 SharedMemQueue MemServer("Local\\UniHook_IPC", 1024, SharedMemQueue::Mode::Server);
@@ -56,12 +47,13 @@ void ExecuteCommands(std::vector<Command>& Commands)
 
 		if (Cmd.m_EnumID == Options::HookSubAtAddress)
 		{
-			//HookAtAddr:0xDEADBEEF
+			printf("Sending Message to Dll: Hook At Address\n");
 			MemServer.PushMessage((BYTE*) (std::string("HookAtAddr:") + Cmd.m_ParamOut).c_str() );
 		}
 
 		if (Cmd.m_EnumID == Options::HookSubroutineAtIndex)
 		{
+			printf("Sending Message to Dll: Hook At Index\n");
 			MemServer.PushMessage((BYTE*)(std::string("HookAtIndex:") + Cmd.m_ParamOut).c_str());
 		}
 	}
@@ -85,15 +77,13 @@ int main(int argc,char* argv[])
 
 	/*Allow user to input their own arguments, after we are running, 
 	pass to dll via the shared memory queue*/
-	std::string Input;
 	do 
 	{
+		std::string Input;
 		std::cout << "Enter Command: ";
 		std::getline(std::cin, Input);
-		std::cout << "Entered: " << Input << "\n";
 
-		std::vector<std::string> SplitArgs = split(Input);
-		Parser.ResetArguments(SplitArgs);
+		Parser.ResetArguments(split(Input, " "));
 		Parser.Parse();
 		ExecuteCommands(Parser.GetFoundArgs());
 	} while (!ShouldExit);

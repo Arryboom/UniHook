@@ -153,10 +153,11 @@
     <ClCompile Include="UniHookLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Common\IPC\SharedMemMutex.h" />
+    <ClInclude Include="..\Common\IPC\SharedMemQueue.h" />
+    <ClInclude Include="..\Common\Utilities.h" />
     <ClInclude Include="CmdLineParser.h" />
     <ClInclude Include="Injector.h" />
-    <ClInclude Include="SharedMemMutex.h" />
-    <ClInclude Include="SharedMemQueue.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

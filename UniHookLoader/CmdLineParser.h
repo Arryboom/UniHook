@@ -57,6 +57,7 @@ CmdLineParser::CmdLineParser(int ArgCount, char** Args)
 void CmdLineParser::ResetArguments(int ArgCount, char** Args)
 {
 	m_Args.clear();
+	m_FoundArgs.clear();
 	for (int i = 0; i < ArgCount; i++)
 	{
 		m_Args.push_back(Args[i]);
@@ -66,9 +67,10 @@ void CmdLineParser::ResetArguments(int ArgCount, char** Args)
 void CmdLineParser::ResetArguments(const std::vector<std::string>& Args)
 {
 	m_Args.clear();
+	m_FoundArgs.clear();
 	for (std::string Arg : Args)
 	{	
-		m_Args.push_back(Arg.c_str());
+		m_Args.push_back(Arg);
 	}
 }
 

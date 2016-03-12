@@ -19,6 +19,12 @@
     <Filter Include="Header Files\PDB Query">
       <UniqueIdentifier>{ea12684c-09cb-4bef-8b24-d1ebe3c32ad8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Common">
+      <UniqueIdentifier>{46a39944-1c4d-446a-94a7-a692013e47d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Common\IPC">
+      <UniqueIdentifier>{919b5691-47a3-421e-8b43-c3f3b98d09a3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -52,6 +58,15 @@
     </ClInclude>
     <ClInclude Include="..\PolyHook\PolyHook\PolyHook.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\IPC\SharedMemMutex.h">
+      <Filter>Header Files\Common\IPC</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\IPC\SharedMemQueue.h">
+      <Filter>Header Files\Common\IPC</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Utilities.h">
+      <Filter>Header Files\Common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
