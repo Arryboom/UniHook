@@ -12,9 +12,9 @@ Caller->Store Regs->Interupt1->Restore Regs->Original Hooked Func->Store Regs->I
 
 This demo has 3 core parts
 
-1)PolyHook for hooking backend
-2)UniHook dll which uses polyhook, and then creates runtime callbacks
-3)UniHook loader which injects the UniHook dll, and sends it commands via a shared memory queue/stack system
+1. PolyHook for hooking backend
+2. UniHook dll which uses polyhook, and then creates runtime callbacks
+3. UniHook loader which injects the UniHook dll, and sends it commands via a shared memory queue/stack system
 
 #LICENSE
 MIT
