@@ -15,7 +15,7 @@ This demo has 3 core parts
 1. PolyHook for hooking backend
 2. UniHook dll which uses polyhook, and then creates runtime callbacks
 3. UniHook loader which injects the UniHook dll, and sends it commands via a shared memory queue/stack system
-  * Shared memory synchronization is done through the Shared Memory Mutex object, which uses a WINAPI named mutex
+  * Shared memory synchronization is done through the Shared Memory Mutex object, which uses a WINAPI named mutex, this objects can be managed by c++11's locking wrappers such as lock_guard
 
 #LICENSE
 MIT
