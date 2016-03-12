@@ -1,8 +1,8 @@
 #pragma once
 typedef void(__stdcall* tGeneric)();
-__declspec(noinline) void Interupt1()
+__declspec(noinline) void Interupt1(__int64 pOriginal)
 {
-	cPrint("[+] In Interupt1\n");
+	cPrint("[+] Interupt:%I64X\n",pOriginal);
 }
 
 __declspec(noinline) void Interupt2()
@@ -70,6 +70,23 @@ volatile int WritePOPA(BYTE* Address)
 	BYTE X64POPFA[] = { 0x48, 0x83, 0xC4, 0x20, 0x41, 0x5B, 0x41, 0x5A, 0x41, 0x59, 0x41, 0x58, 0x5A, 0x59, 0x58, 0x5C, 0x5B };
 	memcpy(Address, X64POPFA, sizeof(X64POPFA));
 	return sizeof(X64POPFA);
+}
+
+volatile int WritePUSHA_WPARAM(BYTE* Address, __int64 RCXVal)
+{
+	/*
+	PUSHA From above 
+	+
+	movabs rcx,0xCCCCCCCCCCCCCCCC
+	sub rsp, 0x20
+	*/
+	BYTE X64PUSHFA[] = { 0x53, 0x54, 0x50, 0x51, 0x52, 0x41, 0x50, 0x41, 0x51, 
+		0x41, 0x52, 0x41, 0x53, 0x48, 0xB9, 
+		0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 
+		0x48, 0x83, 0xEC, 0x20 };
+	memcpy(Address, X64PUSHFA, sizeof(X64PUSHFA));
+	*(DWORD64*)&((BYTE*)Address)[15] = RCXVal;
+	return sizeof(X64PUSHFA);
 }
 
 #define LODWORD(_qw)    ((DWORD)(_qw))
@@ -140,7 +157,7 @@ void HookFunctionAtRuntime(BYTE* SubRoutineAddress, HookMethod Method)
 	}
 
 	int WriteOffset = 0;
-	WriteOffset += WritePUSHA(Callback);
+	WriteOffset += WritePUSHA_WPARAM(Callback,(DWORD64)SubRoutineAddress);
 	WriteOffset += WriteAbsoluteCall(Callback + WriteOffset, (DWORD64)&Interupt1);
 	WriteOffset += WritePOPA(Callback + WriteOffset);
 

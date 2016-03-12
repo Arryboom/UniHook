@@ -1,8 +1,8 @@
 #pragma once
 
-__declspec(noinline) void __stdcall Interupt1()
+__declspec(noinline) void __stdcall Interupt1(DWORD pOriginal)
 {
-	cPrint("[+] In Interupt1\n");
+	cPrint("[+] Interupt:%p\n", pOriginal);
 }
 
 __declspec(noinline) void __stdcall Interupt2()
@@ -29,6 +29,19 @@ volatile int WritePUSHA(BYTE* Address)
 {
 	BYTE PUSHA[] = { 0x60, 0x9C };
 	memcpy(Address, PUSHA, sizeof(PUSHA));
+	return sizeof(PUSHA);
+}
+
+volatile int WritePUSHA_WPARAM(BYTE* Address, DWORD ParamVal)
+{
+	/*
+	pusha
+	pushf
+	push 0xCCCCCCCC <-First Param
+	*/
+	BYTE PUSHA[] = { 0x60, 0x9C, 0x68, 0xCC, 0xCC, 0xCC, 0xCC };
+	memcpy(Address, PUSHA, sizeof(PUSHA));
+	*(DWORD*)&((BYTE*)Address)[3] = ParamVal;
 	return sizeof(PUSHA);
 }
 
@@ -74,7 +87,7 @@ void HookFunctionAtRuntime(BYTE* SubRoutineAddress,HookMethod Method)
 	}
 	
 	int WriteOffset = 0;
-	WriteOffset += WritePUSHA(Callback);
+	WriteOffset += WritePUSHA_WPARAM(Callback,(DWORD)SubRoutineAddress);
 	WriteOffset += WriteRelativeCALL((DWORD)Callback + WriteOffset, (DWORD)&Interupt1);
 	WriteOffset += WritePOPA(Callback + WriteOffset);
 
