@@ -102,6 +102,7 @@ DWORD WINAPI InitThread(LPVOID lparam)
 					FindSubRoutines();
 
 				int Index = atoi(SplitCmd[1].c_str());
+				cPrint("[+] Hooking Function at index:%d\n", Index);
 				HookFunctionAtRuntime((BYTE*)Results[Index].GetCallDestination(), HookMethod::INLINE);
 			}
 			else if (strcmp(SplitCmd[0].c_str(), "HookAtAddr") == 0)
