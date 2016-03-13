@@ -1,19 +1,19 @@
 #pragma once
 
 //A pointer to the function that was detoured
-__declspec(noinline) void __stdcall Interupt1(void* pOriginal)
+__declspec(noinline) void __stdcall PrologInterupt(void* pOriginal)
 {
-	cPrint("[+] Interupt:%p\n", pOriginal);
+	cPrint("[+] In Prolog, pOriginal:[%p]\n", pOriginal);
 }
 
 //A pointer to our PolyHook object, can be used to unhook, etc
-__declspec(noinline) void __stdcall Interupt2(PLH::IHook* pHook)
+__declspec(noinline) void __stdcall PostlogInterupt(PLH::IHook* pHook)
 {
 	if (pHook->GetType() == PLH::HookType::VEH)
 	{
 		auto ProtectionObject = ((PLH::VEHHook*)pHook)->GetProtectionObject();
 	}
-	cPrint("[+] In Interupt2\n");
+	cPrint("[+] In Postlog\n");
 }
 
 template<typename T>
@@ -96,13 +96,13 @@ void HookFunctionAtRuntime(BYTE* SubRoutineAddress,HookMethod Method)
 	
 	int WriteOffset = 0;
 	WriteOffset += WritePUSHA_WPARAM(Callback,(DWORD)SubRoutineAddress);
-	WriteOffset += WriteRelativeCALL((DWORD)Callback + WriteOffset, (DWORD)&Interupt1);
+	WriteOffset += WriteRelativeCALL((DWORD)Callback + WriteOffset, (DWORD)&PrologInterupt);
 	WriteOffset += WritePOPA(Callback + WriteOffset);
 
 	WriteOffset += WriteRelativeCALL((DWORD)Callback + WriteOffset, Original);
 
 	WriteOffset += WritePUSHA_WPARAM(Callback+WriteOffset,(DWORD)Hook.get());
-	WriteOffset += WriteRelativeCALL((DWORD)Callback + WriteOffset, (DWORD)&Interupt2);
+	WriteOffset += WriteRelativeCALL((DWORD)Callback + WriteOffset, (DWORD)&PostlogInterupt);
 	WriteOffset += WritePOPA(Callback + WriteOffset);
 
 	WriteOffset += WriteRET(Callback + WriteOffset);

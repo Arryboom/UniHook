@@ -1,17 +1,17 @@
 #pragma once
 typedef void(__stdcall* tGeneric)();
-__declspec(noinline) void Interupt1(void* pOriginal)
+__declspec(noinline) void PrologInterupt(void* pOriginal)
 {
-	cPrint("[+] Interupt:%I64X\n",pOriginal);
+	cPrint("[+] In Prolog, pOriginal:[%I64X]\n",pOriginal);
 }
 
-__declspec(noinline) void Interupt2(PLH::IHook* pHook)
+__declspec(noinline) void PostlogInterupt(PLH::IHook* pHook)
 {
 	if (pHook->GetType() == PLH::HookType::VEH)
 	{
 		auto ProtectionObject = ((PLH::VEHHook*)pHook)->GetProtectionObject();
 	}
-	cPrint("[+] In Interupt2\n");
+	cPrint("[+] In Postlog\n");
 }
 
 BYTE ABS_JMP_ASM[] = { 0x50, 0x48, 0xB8, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0x48, 0x87, 0x04, 0x24, 0xC3 };
@@ -164,7 +164,7 @@ void HookFunctionAtRuntime(BYTE* SubRoutineAddress, HookMethod Method)
 
 	int WriteOffset = 0;
 	WriteOffset += WritePUSHA_WPARAM(Callback,(DWORD64)SubRoutineAddress);
-	WriteOffset += WriteAbsoluteCall(Callback + WriteOffset, (DWORD64)&Interupt1);
+	WriteOffset += WriteAbsoluteCall(Callback + WriteOffset, (DWORD64)&PrologInterupt);
 	WriteOffset += WritePOPA(Callback + WriteOffset);
 
 	WriteOffset += WriteSubShadowSpace(Callback+WriteOffset);
@@ -173,7 +173,7 @@ void HookFunctionAtRuntime(BYTE* SubRoutineAddress, HookMethod Method)
 	WriteOffset += WriteAddShadowSpace(Callback + WriteOffset);
 
 	WriteOffset += WritePUSHA_WPARAM(Callback + WriteOffset,(DWORD64)Hook.get());
-	WriteOffset += WriteAbsoluteCall(Callback + WriteOffset, (DWORD64)&Interupt2);
+	WriteOffset += WriteAbsoluteCall(Callback + WriteOffset, (DWORD64)&PostlogInterupt);
 	WriteOffset += WritePOPA(Callback + WriteOffset);
 
 	WriteOffset += WriteRET(Callback + WriteOffset);
