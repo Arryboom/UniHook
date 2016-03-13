@@ -1,5 +1,5 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
-// git subtree pull --prefix=PolyHook PolyHook master
+// git subtree pull --prefix=PolyHook PolyHook master --squash
 #include <Windows.h>
 #include <stdio.h>
 #include "Tools.h"
@@ -11,7 +11,6 @@
 
 InstructionSearcher m_InsSearcher;
 std::vector<std::shared_ptr<PLH::IHook>> m_Hooks;
-std::vector<BYTE*> m_Callbacks;
 std::vector<SearchResult> Results;
 
 enum class HookMethod
@@ -133,11 +132,6 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 		
 	case DLL_THREAD_DETACH:
 	case DLL_PROCESS_DETACH:
-		for (int i = 0; i < m_Callbacks.size();i++)
-		{
-			delete[] m_Callbacks[i];
-		}
-		m_Callbacks.clear();
 		break;
 	}
 	return TRUE;

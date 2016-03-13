@@ -1,12 +1,16 @@
 #pragma once
 typedef void(__stdcall* tGeneric)();
-__declspec(noinline) void Interupt1()
+__declspec(noinline) void Interupt1(void* pOriginal)
 {
-	cPrint("[+] In Interupt1\n");
+	cPrint("[+] Interupt:%I64X\n",pOriginal);
 }
 
-__declspec(noinline) void Interupt2()
+__declspec(noinline) void Interupt2(PLH::IHook* pHook)
 {
+	if (pHook->GetType() == PLH::HookType::VEH)
+	{
+		auto ProtectionObject = ((PLH::VEHHook*)pHook)->GetProtectionObject();
+	}
 	cPrint("[+] In Interupt2\n");
 }
 
@@ -72,6 +76,23 @@ volatile int WritePOPA(BYTE* Address)
 	return sizeof(X64POPFA);
 }
 
+volatile int WritePUSHA_WPARAM(BYTE* Address, __int64 RCXVal)
+{
+	/*
+	PUSHA From above 
+	+
+	movabs rcx,0xCCCCCCCCCCCCCCCC
+	sub rsp, 0x20
+	*/
+	BYTE X64PUSHFA[] = { 0x53, 0x54, 0x50, 0x51, 0x52, 0x41, 0x50, 0x41, 0x51, 
+		0x41, 0x52, 0x41, 0x53, 0x48, 0xB9, 
+		0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 
+		0x48, 0x83, 0xEC, 0x20 };
+	memcpy(Address, X64PUSHFA, sizeof(X64PUSHFA));
+	*(DWORD64*)&((BYTE*)Address)[15] = RCXVal;
+	return sizeof(X64PUSHFA);
+}
+
 #define LODWORD(_qw)    ((DWORD)(_qw))
 #define HIDWORD(_qw)    ((DWORD)(((_qw) >> 32) & 0xffffffff))
 BYTE PushRet[] = { 0x48, 0x83, 0xEC, 0x08, 0xC7, 0x04, 0x24, 0xCC, 0xCC, 0xCC, 0xCC, 0xC7, 0x44, 0x24, 0x04, 0xCC, 0xCC, 0xCC, 0xCC };
@@ -113,26 +134,28 @@ volatile int WriteRET(BYTE* Address)
 
 void HookFunctionAtRuntime(BYTE* SubRoutineAddress, HookMethod Method)
 {
-	BYTE* Callback = new BYTE[1024];
+	BYTE* Callback = new BYTE[146];
 	DWORD Old;
-	VirtualProtect(Callback, 1024, PAGE_EXECUTE_READWRITE, &Old);
+	VirtualProtect(Callback, 146, PAGE_EXECUTE_READWRITE, &Old);
 
 	std::shared_ptr<PLH::IHook> Hook;
 	DWORD64 Original;
 	if (Method == HookMethod::INLINE)
 	{
-		Hook.reset(new PLH::Detour, [](PLH::Detour* Hook) {
+		Hook.reset(new PLH::Detour, [&](PLH::Detour* Hook) {
 			Hook->UnHook();
 			delete Hook;
+			delete[] Callback;
 		});
 		((PLH::Detour*)Hook.get())->SetupHook((BYTE*)SubRoutineAddress, (BYTE*)Callback);
 		Hook->Hook();
 		Original = ((PLH::Detour*)Hook.get())->GetOriginal<DWORD64>();
 	}
 	else if (Method == HookMethod::INT3_BP) {
-		Hook.reset(new PLH::VEHHook, [](PLH::VEHHook* Hook) {
+		Hook.reset(new PLH::VEHHook, [&](PLH::VEHHook* Hook) {
 			Hook->UnHook();
 			delete Hook;
+			delete[] Callback;
 		});
 		((PLH::VEHHook*)Hook.get())->SetupHook((BYTE*)SubRoutineAddress, (BYTE*)Callback, PLH::VEHHook::VEHMethod::INT3_BP);
 		Hook->Hook();
@@ -140,7 +163,7 @@ void HookFunctionAtRuntime(BYTE* SubRoutineAddress, HookMethod Method)
 	}
 
 	int WriteOffset = 0;
-	WriteOffset += WritePUSHA(Callback);
+	WriteOffset += WritePUSHA_WPARAM(Callback,(DWORD64)SubRoutineAddress);
 	WriteOffset += WriteAbsoluteCall(Callback + WriteOffset, (DWORD64)&Interupt1);
 	WriteOffset += WritePOPA(Callback + WriteOffset);
 
@@ -149,7 +172,7 @@ void HookFunctionAtRuntime(BYTE* SubRoutineAddress, HookMethod Method)
 	WriteOffset += WriteAbsoluteJMP(Callback + WriteOffset, Original);
 	WriteOffset += WriteAddShadowSpace(Callback + WriteOffset);
 
-	WriteOffset += WritePUSHA(Callback + WriteOffset);
+	WriteOffset += WritePUSHA_WPARAM(Callback + WriteOffset,(DWORD64)Hook.get());
 	WriteOffset += WriteAbsoluteCall(Callback + WriteOffset, (DWORD64)&Interupt2);
 	WriteOffset += WritePOPA(Callback + WriteOffset);
 
@@ -157,5 +180,4 @@ void HookFunctionAtRuntime(BYTE* SubRoutineAddress, HookMethod Method)
 
 	cPrint("[+] Callback at: %I64X\n", Callback);
 	m_Hooks.push_back(Hook);
-	//m_Callbacks.push_back(Callback);
 }
