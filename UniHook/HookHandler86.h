@@ -61,25 +61,27 @@ volatile int WriteRET(BYTE* Address)
 
 void HookFunctionAtRuntime(BYTE* SubRoutineAddress,HookMethod Method)
 {
-	BYTE* Callback = new BYTE[1024];
+	BYTE* Callback = new BYTE[29];
 	DWORD Old;
-	VirtualProtect(Callback, 1024, PAGE_EXECUTE_READWRITE, &Old);
+	VirtualProtect(Callback, 29, PAGE_EXECUTE_READWRITE, &Old);
 
 	std::shared_ptr<PLH::IHook> Hook;
 	DWORD Original;
 	if (Method == HookMethod::INLINE)
 	{
-		Hook.reset(new PLH::Detour, [](PLH::Detour* Hook) {
+		Hook.reset(new PLH::Detour, [&](PLH::Detour* Hook) {
 			Hook->UnHook();
 			delete Hook;
+			delete[] Callback;
 		});
 		((PLH::Detour*)Hook.get())->SetupHook((BYTE*)SubRoutineAddress, (BYTE*)Callback);
 		Hook->Hook();
 		Original =((PLH::Detour*)Hook.get())->GetOriginal<DWORD>();
 	}else if (Method == HookMethod::INT3_BP){
-		Hook.reset(new PLH::VEHHook, [](PLH::VEHHook* Hook) {
+		Hook.reset(new PLH::VEHHook, [&](PLH::VEHHook* Hook) {
 			Hook->UnHook();
 			delete Hook;
+			delete[] Callback;
 		});
 		((PLH::VEHHook*)Hook.get())->SetupHook((BYTE*)SubRoutineAddress, (BYTE*)Callback,PLH::VEHHook::VEHMethod::INT3_BP);
 		Hook->Hook();
@@ -101,5 +103,4 @@ void HookFunctionAtRuntime(BYTE* SubRoutineAddress,HookMethod Method)
 
 	cPrint("[+] Callback at: %p\n", Callback);
 	m_Hooks.push_back(Hook);
-	//m_Callbacks.push_back(Callback);
 }
