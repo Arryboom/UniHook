@@ -1,11 +1,13 @@
 #pragma once
 
+//A pointer to the function that was detoured
 __declspec(noinline) void __stdcall Interupt1(DWORD pOriginal)
 {
 	cPrint("[+] Interupt:%p\n", pOriginal);
 }
 
-__declspec(noinline) void __stdcall Interupt2()
+//A pointer to our PolyHook object, can be used to unhook, etc
+__declspec(noinline) void __stdcall Interupt2(DWORD pHookObject)
 {
 	cPrint("[+] In Interupt2\n");
 }
@@ -95,7 +97,7 @@ void HookFunctionAtRuntime(BYTE* SubRoutineAddress,HookMethod Method)
 
 	WriteOffset += WriteRelativeCALL((DWORD)Callback + WriteOffset, Original);
 
-	WriteOffset += WritePUSHA(Callback+WriteOffset);
+	WriteOffset += WritePUSHA_WPARAM(Callback+WriteOffset,(DWORD)Hook.get());
 	WriteOffset += WriteRelativeCALL((DWORD)Callback + WriteOffset, (DWORD)&Interupt2);
 	WriteOffset += WritePOPA(Callback + WriteOffset);
 
