@@ -7,7 +7,7 @@ __declspec(noinline) void __stdcall Interupt1(DWORD pOriginal)
 }
 
 //A pointer to our PolyHook object, can be used to unhook, etc
-__declspec(noinline) void __stdcall Interupt2(DWORD pHookObject)
+__declspec(noinline) void __stdcall Interupt2(PLH::IHook* pHook)
 {
 	cPrint("[+] In Interupt2\n");
 }
