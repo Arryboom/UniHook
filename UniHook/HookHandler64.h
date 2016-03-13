@@ -1,12 +1,16 @@
 #pragma once
 typedef void(__stdcall* tGeneric)();
-__declspec(noinline) void Interupt1(__int64 pOriginal)
+__declspec(noinline) void Interupt1(void* pOriginal)
 {
 	cPrint("[+] Interupt:%I64X\n",pOriginal);
 }
 
-__declspec(noinline) void Interupt2()
+__declspec(noinline) void Interupt2(PLH::IHook* pHook)
 {
+	if (pHook->GetType() == PLH::HookType::VEH)
+	{
+		auto ProtectionObject = ((PLH::VEHHook*)pHook)->GetProtectionObject();
+	}
 	cPrint("[+] In Interupt2\n");
 }
 
@@ -168,7 +172,7 @@ void HookFunctionAtRuntime(BYTE* SubRoutineAddress, HookMethod Method)
 	WriteOffset += WriteAbsoluteJMP(Callback + WriteOffset, Original);
 	WriteOffset += WriteAddShadowSpace(Callback + WriteOffset);
 
-	WriteOffset += WritePUSHA(Callback + WriteOffset);
+	WriteOffset += WritePUSHA_WPARAM(Callback + WriteOffset,(DWORD64)Hook.get());
 	WriteOffset += WriteAbsoluteCall(Callback + WriteOffset, (DWORD64)&Interupt2);
 	WriteOffset += WritePOPA(Callback + WriteOffset);
 

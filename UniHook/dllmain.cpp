@@ -1,5 +1,5 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
-// git subtree pull --prefix=PolyHook PolyHook master
+// git subtree pull --prefix=PolyHook PolyHook master --squash
 #include <Windows.h>
 #include <stdio.h>
 #include "Tools.h"
