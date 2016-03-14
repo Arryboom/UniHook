@@ -1,15 +1,20 @@
 #pragma once
+#include "ittnotify.h"
+
+__itt_domain* g_domain = __itt_domain_createA("PolyHook");
 
 //A pointer to the function that was detoured
 __declspec(noinline) void __stdcall PrologInterupt(void* pOriginal)
 {
-	cPrint("[+] In Prolog, pOriginal:[%p]\n", pOriginal);
+    cPrint("[+] In Prolog, pOriginal:[%p]\n", pOriginal);
+    __itt_task_begin_fn(g_domain, __itt_null, __itt_null, pOriginal);
 }
 
 //A pointer to our PolyHook object, can be used to unhook, etc
 __declspec(noinline) void __stdcall PostlogInterupt(PLH::IHook* pHook)
 {
-	if (pHook->GetType() == PLH::HookType::VEH)
+    __itt_task_end(g_domain);
+    if (pHook->GetType() == PLH::HookType::VEH)
 	{
 		auto ProtectionObject = ((PLH::VEHHook*)pHook)->GetProtectionObject();
 	}

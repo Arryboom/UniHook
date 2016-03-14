@@ -1,13 +1,19 @@
 #pragma once
+#include "ittnotify.h"
+
+__itt_domain* g_domain = __itt_domain_createA("PolyHook");
+
 typedef void(__stdcall* tGeneric)();
 __declspec(noinline) void PrologInterupt(void* pOriginal)
 {
 	cPrint("[+] In Prolog, pOriginal:[%I64X]\n",pOriginal);
+    __itt_task_begin_fn(g_domain, __itt_null, __itt_null, pOriginal);
 }
 
 __declspec(noinline) void PostlogInterupt(PLH::IHook* pHook)
 {
-	if (pHook->GetType() == PLH::HookType::VEH)
+    __itt_task_end(g_domain);
+    if (pHook->GetType() == PLH::HookType::VEH)
 	{
 		auto ProtectionObject = ((PLH::VEHHook*)pHook)->GetProtectionObject();
 	}
