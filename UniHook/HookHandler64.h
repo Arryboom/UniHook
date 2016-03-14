@@ -7,7 +7,7 @@ typedef void(__stdcall* tGeneric)();
 __declspec(noinline) void PrologInterupt(void* pOriginal)
 {
 	cPrint("[+] In Prolog, pOriginal:[%I64X]\n",pOriginal);
-    __itt_task_begin_fn(g_domain, __itt_null, __itt_null, pOriginal);
+    __itt_task_begin_fn(g_domain, __itt_null, __itt_null, pOriginal); //needs only function pointer and gets the info from symbols
 }
 
 __declspec(noinline) void PostlogInterupt(PLH::IHook* pHook)
