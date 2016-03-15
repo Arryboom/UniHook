@@ -25,6 +25,7 @@ enum class HookMethod
 	#include "HookHandler86.h"
 #endif
 PDBReader m_PDBReader;
+SharedMemQueue* MemClient;
 __declspec(noinline) volatile void FindSubRoutines()
 {
 	HANDLE hMod = GetModuleHandle(NULL); //Get Current Process (Base Address)
@@ -52,21 +53,34 @@ __declspec(noinline) volatile void FindSubRoutines()
 			SearchResult SubRoutine = Results[j];
 			
 			std::string ResolvedName;
-			if(m_PDBReader.Enumerate(SubRoutine.GetCallDestination(),ResolvedName))
-				cPrint("[+] Found Subroutine [%d] at: [%p] [%s]\n",j,SubRoutine.GetCallDestination(), ResolvedName.c_str());
-			else
+			if (m_PDBReader.Enumerate(SubRoutine.GetCallDestination(), ResolvedName))
+			{
+				cPrint("[+] Found Subroutine [%d] at: [%p] [%s]\n", j, SubRoutine.GetCallDestination(), ResolvedName.c_str());
+				
+				char Buf[64];
+				snprintf(Buf, 64, "[%d] at: [%p] [%s]", j, SubRoutine.GetCallDestination(), ResolvedName.c_str());
+				MemClient->PushMessage((BYTE*)Buf);
+			}else {
 				cPrint("[+] Found Subroutine [%d] at: [%p] [%s]\n", j, SubRoutine.GetCallDestination(), " ");
+
+				char Buf[64];
+				snprintf(Buf, 64, "[%d] at: [%p] [%s]", j, SubRoutine.GetCallDestination(), " ");
+				MemClient->PushMessage((BYTE*)Buf);
+			}
 		}
 		cPrint("[+] Found: %d Subroutines\n", Results.size());
+		char Buf[64];
+		snprintf(Buf, 64, "Found %d Subroutines", Results.size());
+		MemClient->PushMessage((BYTE*)Buf);
 	}
 }
 
 DWORD WINAPI InitThread(LPVOID lparam)
 {
 	CreateConsole();
-	SharedMemQueue MemClient("Local\\UniHook_IPC", 1024, SharedMemQueue::Mode::Client);
+	MemClient = new SharedMemQueue("Local\\UniHook_IPC", 4096, SharedMemQueue::Mode::Client);
 	MemMessage Msg;
-	if (MemClient.PopMessage(Msg))
+	if (MemClient->PopMessage(Msg))
 		printf("%s\n", Msg.m_Data);
 	else
 		printf("[+] IPC FAILED\n");
@@ -75,16 +89,13 @@ DWORD WINAPI InitThread(LPVOID lparam)
 
 	do 
 	{
-		//Check if we have a message
+		MemClient->WaitForMessage();
 		MemMessage Msg;
-		if (!MemClient.PopMessage(Msg))
-		{
-			Sleep(10);
+		if (!MemClient->PopMessage(Msg))
 			continue;
-		}
 
 		//Convert message to string
-		std::string Cmd((char*)Msg.m_Data, sizeof(MemMessage));
+		std::string Cmd((char*)Msg.m_Data, sizeof(MemMessage::m_Data));
 		if (strcmp(Cmd.c_str(), "ListSubs") == 0)
 		{
 			cPrint("[+] Executing Command: %s\n", Cmd.c_str());
@@ -103,6 +114,10 @@ DWORD WINAPI InitThread(LPVOID lparam)
 				int Index = atoi(SplitCmd[1].c_str());
 				cPrint("[+] Hooking Function at index:%d\n", Index);
 				HookFunctionAtRuntime((BYTE*)Results[Index].GetCallDestination(), HookMethod::INLINE);
+
+				char Buf[64];
+				snprintf(Buf, 64, "Hooking Function at:%d", Index);
+				MemClient->PushMessage((BYTE*)Buf);
 			}
 			else if (strcmp(SplitCmd[0].c_str(), "HookAtAddr") == 0)
 			{
@@ -113,6 +128,10 @@ DWORD WINAPI InitThread(LPVOID lparam)
 #endif
 				cPrint("[+] Hooking Function:%p\n", Address);
 				HookFunctionAtRuntime((BYTE*)Address, HookMethod::INLINE);
+
+				char Buf[64];
+				snprintf(Buf, 64, "Hooking Function at:%p", Address);
+				MemClient->PushMessage((BYTE*)Buf);
 			}
 		}
 	} while (1);

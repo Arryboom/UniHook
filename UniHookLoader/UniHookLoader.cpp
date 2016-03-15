@@ -18,7 +18,7 @@ enum Options
 };
 
 //Shared memory IPC mechanism to talk to our injected DLL
-SharedMemQueue MemServer("Local\\UniHook_IPC", 1024, SharedMemQueue::Mode::Server);
+SharedMemQueue MemServer("Local\\UniHook_IPC", 4096, SharedMemQueue::Mode::Server);
 Injector WindowsInjector;
 bool ShouldExit = false;
 void ExecuteCommands(std::vector<Command>& Commands)
@@ -75,8 +75,6 @@ int main(int argc,char* argv[])
 	Parser.Parse();
 	ExecuteCommands(Parser.GetFoundArgs());
 
-	/*Allow user to input their own arguments, after we are running, 
-	pass to dll via the shared memory queue*/
 	do 
 	{
 		std::string Input;
@@ -86,6 +84,13 @@ int main(int argc,char* argv[])
 		Parser.ResetArguments(split(Input, " "));
 		Parser.Parse();
 		ExecuteCommands(Parser.GetFoundArgs());
+
+		MemServer.WaitForMessage();
+		MemMessage Msg;
+		while (MemServer.PopMessage(Msg))
+		{
+			printf("From Client:%s\n", Msg.m_Data);
+		}
 	} while (!ShouldExit);
     return 0;
 }
