@@ -18,7 +18,7 @@ enum Options
 };
 
 //Shared memory IPC mechanism to talk to our injected DLL
-SharedMemQueue MemServer("Local\\UniHook_IPC", 4096, SharedMemQueue::Mode::Server);
+SharedMemQueue MemServer("Local\\UniHook_IPC", 100000, SharedMemQueue::Mode::Server);
 Injector WindowsInjector;
 bool ShouldExit = false;
 void ExecuteCommands(std::vector<Command>& Commands)
@@ -42,28 +42,28 @@ void ExecuteCommands(std::vector<Command>& Commands)
 		if (Cmd.m_EnumID == Options::ListSubroutines)
 		{
 			printf("Sending Message to Dll: ListSubs\n");
-			MemServer.PushMessage(MemMessage((BYTE*)"ListSubs",9));
+			MemServer.PushMessage(MemMessage("ListSubs"));
 		}
 
 		if (Cmd.m_EnumID == Options::HookSubAtAddress)
 		{
 			printf("Sending Message to Dll: Hook At Address\n");
 			std::string Msg(std::string("HookAtAddr:") + Cmd.m_ParamOut);
-			MemServer.PushMessage(MemMessage((BYTE*)Msg.c_str(),Msg.size()));
+			MemServer.PushMessage(MemMessage(Msg));
 		}
 
 		if (Cmd.m_EnumID == Options::HookSubroutineAtIndex)
 		{
 			printf("Sending Message to Dll: Hook At Index\n");
 			std::string Msg(std::string("HookAtIndex:") + Cmd.m_ParamOut);
-			MemServer.PushMessage(MemMessage((BYTE*)Msg.c_str(),Msg.size()));
+			MemServer.PushMessage(MemMessage(Msg));
 		}
 	}
 }
 
 int main(int argc,char* argv[])
 {
-	MemServer.PushMessage(MemMessage((BYTE*)"IPC Mechanism Initialized!",27));
+	MemServer.PushMessage(MemMessage("IPC Mechanism Initialized!"));
 
 	//Read Command Line Arguments, then execute if found
 	CmdLineParser Parser(argc, argv);

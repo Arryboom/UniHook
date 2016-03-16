@@ -10,6 +10,24 @@ struct MemMessage
 		m_Data.resize(Size);
 		memcpy(&m_Data[0], Data, m_DataSize);
 	}
+	MemMessage(const char* Frmt, ...)
+	{
+		va_list args;
+		va_start(args, Frmt);
+		char szBuffer[512];
+		int nBuf = vsnprintf_s(szBuffer, 511,Frmt, args);
+		va_end(args);
+
+		m_DataSize = nBuf + 1;
+		m_Data.resize(m_DataSize);
+		memcpy(&m_Data[0], szBuffer, m_DataSize);
+	}
+	MemMessage(const std::string& Msg)
+	{
+		m_DataSize = Msg.size();
+		m_Data.resize(m_DataSize);
+		memcpy(&m_Data[0], Msg.c_str(), m_DataSize);
+	}
 	MemMessage()
 	{
 		
@@ -47,8 +65,6 @@ public:
 	void WaitForMessage();
 	DWORD GetOutMessageCount() const;
 	DWORD GetInMessageCount() const;
-
-
 private:
 	mutable SharedMemMutex m_Mutex;
 	SharedMemQHeader* m_OutHeader;
