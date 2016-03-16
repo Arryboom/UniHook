@@ -14,6 +14,7 @@ struct MemMessage
 	{
 		
 	}
+	//Vector data is written into shared Mem
 	std::vector<BYTE> m_Data;
 	DWORD m_DataSize;
 };
@@ -87,7 +88,6 @@ SharedMemQueue::SharedMemQueue(const std::string& ServerName, const DWORD BufSiz
 		return;
 	}
 
-	printf("%X\n", m_Buffer);
 	if (Type == Mode::Server)
 	{
 		m_OutHeader = (SharedMemQHeader*)m_Buffer;
@@ -159,11 +159,18 @@ bool SharedMemQueue::PopMessage(MemMessage& Msg)
 		return false;
 
 	BYTE* ReadLocation = ((BYTE*)m_InHeader) + sizeof(SharedMemQHeader) + m_InHeader->m_OffsetToEndOfLastMessage - sizeof(MemMessage::m_DataSize);
+	
+	//Get size of message data
 	DWORD MsgSize = *(DWORD*)ReadLocation;
 	ReadLocation -= MsgSize;
 
+	//Make room in the vector for our data
 	Msg.m_Data.resize(MsgSize);
+
+	//Read the data
 	memcpy(&Msg.m_Data[0], ReadLocation, MsgSize);
+
+	//Set the size of the message in the struct
 	Msg.m_DataSize = MsgSize;
 
 	m_InHeader->m_OffsetToEndOfLastMessage -= MsgSize + sizeof(MemMessage::m_DataSize);
