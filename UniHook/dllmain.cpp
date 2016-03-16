@@ -25,7 +25,7 @@ enum class HookMethod
 	#include "HookHandler86.h"
 #endif
 PDBReader m_PDBReader;
-SharedMemQueue* MemClient;
+std::unique_ptr<SharedMemQueue> MemClient;
 __declspec(noinline) volatile void FindSubRoutines()
 {
 	HANDLE hMod = GetModuleHandle(NULL); //Get Current Process (Base Address)
@@ -50,6 +50,10 @@ __declspec(noinline) volatile void FindSubRoutines()
 		Results = m_InsSearcher.SearchForInstruction(INSType::CALL, SectionStart, SectionEnd);
 
 		MemClient->ManualLock();
+		auto CloseLock = PLH::finally([&] {
+			//Ensures we close lock even with exceptions
+			MemClient->ManualUnlock();
+		});
 		for (int j = 0; j < Results.size();j++)
 		{
 			SearchResult SubRoutine = Results[j];
@@ -59,30 +63,25 @@ __declspec(noinline) volatile void FindSubRoutines()
 			{
 				cPrint("[+] Found Subroutine [%d] at: [%p] [%s]\n", j, SubRoutine.GetCallDestination(), ResolvedName.c_str());
 				
-				char Buf[256];
-				snprintf(Buf, 256, "[%d] at: [%p] [%s]", j, SubRoutine.GetCallDestination(), ResolvedName.c_str());
-				MemClient->PushMessage(MemMessage((BYTE*)Buf,strlen(Buf)+1),true);
+				MemMessage Msg("[%d] at: [%p] [%s]", j, SubRoutine.GetCallDestination(), ResolvedName.c_str());
+				MemClient->PushMessage(Msg,true);
 			}else {
 				cPrint("[+] Found Subroutine [%d] at: [%p] [%s]\n", j, SubRoutine.GetCallDestination(), " ");
 
-				char Buf[256];
-				snprintf(Buf, 256, "[%d] at: [%p] [%s]", j, SubRoutine.GetCallDestination(), " ");
-				MemClient->PushMessage(MemMessage((BYTE*)Buf,strlen(Buf)+1),true);
+				MemMessage Msg("[%d] at: [%p] [%s]", j, SubRoutine.GetCallDestination(), " ");
+				MemClient->PushMessage(Msg,true);
 			}
 		}
-
 		cPrint("[+] Found: %d Subroutines\n", Results.size());
-		char Buf[256];
-		snprintf(Buf, 256, "Found %d Subroutines", Results.size());
-		MemClient->PushMessage(MemMessage((BYTE*)Buf, strlen(Buf)+1),true);
-		MemClient->ManualUnlock();
+		MemMessage Msg("Found %d Subroutines", Results.size());
+		MemClient->PushMessage(Msg,true);
 	}
 }
 
 DWORD WINAPI InitThread(LPVOID lparam)
 {
 	CreateConsole();
-	MemClient = new SharedMemQueue("Local\\UniHook_IPC", 4096, SharedMemQueue::Mode::Client);
+	MemClient.reset(new SharedMemQueue("Local\\UniHook_IPC", 100000, SharedMemQueue::Mode::Client));
 	MemMessage Msg;
 	if (MemClient->PopMessage(Msg))
 		printf("%s\n", &Msg.m_Data[0]);
@@ -119,9 +118,8 @@ DWORD WINAPI InitThread(LPVOID lparam)
 				cPrint("[+] Hooking Function at index:%d\n", Index);
 				HookFunctionAtRuntime((BYTE*)Results[Index].GetCallDestination(), HookMethod::INLINE);
 
-				char Buf[256];
-				snprintf(Buf, 256, "Hooking Function at:%d", Index);
-				MemClient->PushMessage(MemMessage((BYTE*)Buf,strlen(Buf)+1));
+				MemMessage Msg("Hooking Function at:%d", Index);
+				MemClient->PushMessage(Msg);
 			}
 			else if (strcmp(SplitCmd[0].c_str(), "HookAtAddr") == 0)
 			{
@@ -133,9 +131,8 @@ DWORD WINAPI InitThread(LPVOID lparam)
 				cPrint("[+] Hooking Function:%p\n", Address);
 				HookFunctionAtRuntime((BYTE*)Address, HookMethod::INLINE);
 
-				char Buf[256];
-				snprintf(Buf, 256, "Hooking Function at:%p", Address);
-				MemClient->PushMessage(MemMessage((BYTE*)Buf,strlen(Buf)+1));
+				MemMessage Msg("Hooking Function at:%p", Address);
+				MemClient->PushMessage(Msg);
 			}
 		}
 	} while (1);
