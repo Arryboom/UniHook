@@ -48,6 +48,8 @@ __declspec(noinline) volatile void FindSubRoutines()
 		cPrint("[+] Found Section: %s [%p - %p]\n", SectionHeader[i].Name, SectionStart, SectionEnd);
 
 		Results = m_InsSearcher.SearchForInstruction(INSType::CALL, SectionStart, SectionEnd);
+
+		MemClient->ManualLock();
 		for (int j = 0; j < Results.size();j++)
 		{
 			SearchResult SubRoutine = Results[j];
@@ -57,21 +59,23 @@ __declspec(noinline) volatile void FindSubRoutines()
 			{
 				cPrint("[+] Found Subroutine [%d] at: [%p] [%s]\n", j, SubRoutine.GetCallDestination(), ResolvedName.c_str());
 				
-				char Buf[64];
-				snprintf(Buf, 64, "[%d] at: [%p] [%s]", j, SubRoutine.GetCallDestination(), ResolvedName.c_str());
-				MemClient->PushMessage((BYTE*)Buf);
+				char Buf[256];
+				snprintf(Buf, 256, "[%d] at: [%p] [%s]", j, SubRoutine.GetCallDestination(), ResolvedName.c_str());
+				MemClient->PushMessage(MemMessage((BYTE*)Buf,strlen(Buf)+1),true);
 			}else {
 				cPrint("[+] Found Subroutine [%d] at: [%p] [%s]\n", j, SubRoutine.GetCallDestination(), " ");
 
-				char Buf[64];
-				snprintf(Buf, 64, "[%d] at: [%p] [%s]", j, SubRoutine.GetCallDestination(), " ");
-				MemClient->PushMessage((BYTE*)Buf);
+				char Buf[256];
+				snprintf(Buf, 256, "[%d] at: [%p] [%s]", j, SubRoutine.GetCallDestination(), " ");
+				MemClient->PushMessage(MemMessage((BYTE*)Buf,strlen(Buf)+1),true);
 			}
 		}
+
 		cPrint("[+] Found: %d Subroutines\n", Results.size());
-		char Buf[64];
-		snprintf(Buf, 64, "Found %d Subroutines", Results.size());
-		MemClient->PushMessage((BYTE*)Buf);
+		char Buf[256];
+		snprintf(Buf, 256, "Found %d Subroutines", Results.size());
+		MemClient->PushMessage(MemMessage((BYTE*)Buf, strlen(Buf)+1),true);
+		MemClient->ManualUnlock();
 	}
 }
 
@@ -81,7 +85,7 @@ DWORD WINAPI InitThread(LPVOID lparam)
 	MemClient = new SharedMemQueue("Local\\UniHook_IPC", 4096, SharedMemQueue::Mode::Client);
 	MemMessage Msg;
 	if (MemClient->PopMessage(Msg))
-		printf("%s\n", Msg.m_Data);
+		printf("%s\n", &Msg.m_Data[0]);
 	else
 		printf("[+] IPC FAILED\n");
 
@@ -95,7 +99,7 @@ DWORD WINAPI InitThread(LPVOID lparam)
 			continue;
 
 		//Convert message to string
-		std::string Cmd((char*)Msg.m_Data, sizeof(MemMessage::m_Data));
+		std::string Cmd((char*)&Msg.m_Data[0], Msg.m_DataSize);
 		if (strcmp(Cmd.c_str(), "ListSubs") == 0)
 		{
 			cPrint("[+] Executing Command: %s\n", Cmd.c_str());
@@ -115,9 +119,9 @@ DWORD WINAPI InitThread(LPVOID lparam)
 				cPrint("[+] Hooking Function at index:%d\n", Index);
 				HookFunctionAtRuntime((BYTE*)Results[Index].GetCallDestination(), HookMethod::INLINE);
 
-				char Buf[64];
-				snprintf(Buf, 64, "Hooking Function at:%d", Index);
-				MemClient->PushMessage((BYTE*)Buf);
+				char Buf[256];
+				snprintf(Buf, 256, "Hooking Function at:%d", Index);
+				MemClient->PushMessage(MemMessage((BYTE*)Buf,strlen(Buf)+1));
 			}
 			else if (strcmp(SplitCmd[0].c_str(), "HookAtAddr") == 0)
 			{
@@ -129,9 +133,9 @@ DWORD WINAPI InitThread(LPVOID lparam)
 				cPrint("[+] Hooking Function:%p\n", Address);
 				HookFunctionAtRuntime((BYTE*)Address, HookMethod::INLINE);
 
-				char Buf[64];
-				snprintf(Buf, 64, "Hooking Function at:%p", Address);
-				MemClient->PushMessage((BYTE*)Buf);
+				char Buf[256];
+				snprintf(Buf, 256, "Hooking Function at:%p", Address);
+				MemClient->PushMessage(MemMessage((BYTE*)Buf,strlen(Buf)+1));
 			}
 		}
 	} while (1);

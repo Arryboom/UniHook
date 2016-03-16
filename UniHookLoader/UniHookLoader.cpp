@@ -42,26 +42,28 @@ void ExecuteCommands(std::vector<Command>& Commands)
 		if (Cmd.m_EnumID == Options::ListSubroutines)
 		{
 			printf("Sending Message to Dll: ListSubs\n");
-			MemServer.PushMessage((BYTE*)"ListSubs");
+			MemServer.PushMessage(MemMessage((BYTE*)"ListSubs",9));
 		}
 
 		if (Cmd.m_EnumID == Options::HookSubAtAddress)
 		{
 			printf("Sending Message to Dll: Hook At Address\n");
-			MemServer.PushMessage((BYTE*) (std::string("HookAtAddr:") + Cmd.m_ParamOut).c_str() );
+			std::string Msg(std::string("HookAtAddr:") + Cmd.m_ParamOut);
+			MemServer.PushMessage(MemMessage((BYTE*)Msg.c_str(),Msg.size()));
 		}
 
 		if (Cmd.m_EnumID == Options::HookSubroutineAtIndex)
 		{
 			printf("Sending Message to Dll: Hook At Index\n");
-			MemServer.PushMessage((BYTE*)(std::string("HookAtIndex:") + Cmd.m_ParamOut).c_str());
+			std::string Msg(std::string("HookAtIndex:") + Cmd.m_ParamOut);
+			MemServer.PushMessage(MemMessage((BYTE*)Msg.c_str(),Msg.size()));
 		}
 	}
 }
 
 int main(int argc,char* argv[])
 {
-	MemServer.PushMessage((BYTE*)"IPC Mechanism Initialized!");
+	MemServer.PushMessage(MemMessage((BYTE*)"IPC Mechanism Initialized!",27));
 
 	//Read Command Line Arguments, then execute if found
 	CmdLineParser Parser(argc, argv);
@@ -89,7 +91,7 @@ int main(int argc,char* argv[])
 		MemMessage Msg;
 		while (MemServer.PopMessage(Msg))
 		{
-			printf("From Client:%s\n", Msg.m_Data);
+			printf("From Client:%s\n", &Msg.m_Data[0]);
 		}
 	} while (!ShouldExit);
     return 0;

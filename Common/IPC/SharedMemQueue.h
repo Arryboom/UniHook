@@ -1,17 +1,21 @@
 #pragma once
 #include "SharedMemMutex.h"
 #include <mutex>
+
 struct MemMessage
 {
-	MemMessage(BYTE* Data)
+	MemMessage(BYTE* Data,DWORD Size)
 	{
-		memcpy(m_Data, Data, sizeof(m_Data));
+		m_DataSize = Size;
+		m_Data.resize(Size);
+		memcpy(&m_Data[0], Data, m_DataSize);
 	}
 	MemMessage()
 	{
-
+		
 	}
-	BYTE m_Data[64];
+	std::vector<BYTE> m_Data;
+	DWORD m_DataSize;
 };
 
 struct SharedMemQHeader
@@ -30,12 +34,20 @@ public:
 	};
 	SharedMemQueue(const std::string& ServerName, const DWORD BufSize, Mode Type);
 	~SharedMemQueue();
-	bool PushMessage(MemMessage Msg);
+
+	//For batch operations
+	void ManualLock();
+	void ManualUnlock();
+
+	//Call with true to use manual lock features
+	bool PushMessage(MemMessage Msg,bool ManualLocking = false);
 	bool PopMessage(MemMessage& Msg);
 	bool IsMessageAvailable();
 	void WaitForMessage();
 	DWORD GetOutMessageCount() const;
 	DWORD GetInMessageCount() const;
+
+
 private:
 	mutable SharedMemMutex m_Mutex;
 	SharedMemQHeader* m_OutHeader;
@@ -100,21 +112,39 @@ SharedMemQueue::~SharedMemQueue()
 	CloseHandle(m_hMappedFile);
 }
 
-bool SharedMemQueue::PushMessage(MemMessage Msg)
+void SharedMemQueue::ManualLock()
+{
+	m_Mutex.lock();
+}
+
+void SharedMemQueue::ManualUnlock()
+{
+	m_Mutex.unlock();
+}
+
+bool SharedMemQueue::PushMessage(MemMessage Msg,bool ManualLocking)
 {
 	if (!m_InitOk)
 		return false;
 
-	std::lock_guard<SharedMemMutex> Lock(m_Mutex);
+	if(!ManualLocking)
+		std::lock_guard<SharedMemMutex> Lock(m_Mutex);
 
 	BYTE* WriteLocation = ((BYTE*)m_OutHeader) + sizeof(SharedMemQHeader) + m_OutHeader->m_OffsetToEndOfLastMessage;
 
-	DWORD_PTR Delta = (WriteLocation + sizeof(MemMessage)) - m_Buffer;
+	//Make sure we don't overrun our buffer
+	DWORD_PTR Delta = (WriteLocation + Msg.m_DataSize + sizeof(MemMessage::m_DataSize)) - m_Buffer;
 	if (Delta >= m_BufSize)
 		return false;
 
-	memcpy(WriteLocation, Msg.m_Data, sizeof(MemMessage));
-	m_OutHeader->m_OffsetToEndOfLastMessage += sizeof(MemMessage);
+	//Write Data
+	memcpy(WriteLocation, &Msg.m_Data[0], Msg.m_DataSize);
+	WriteLocation +=  Msg.m_DataSize;
+
+	//Write the message size
+	*(DWORD*)WriteLocation = Msg.m_DataSize;
+	
+	m_OutHeader->m_OffsetToEndOfLastMessage += Msg.m_DataSize + sizeof(MemMessage::m_DataSize);
 	m_OutHeader->m_MessageCount++;
 	return true;
 }
@@ -128,10 +158,15 @@ bool SharedMemQueue::PopMessage(MemMessage& Msg)
 	if (m_InHeader->m_MessageCount < 1)
 		return false;
 
-	BYTE* ReadLocation = ((BYTE*)m_InHeader) + sizeof(SharedMemQHeader) + m_InHeader->m_OffsetToEndOfLastMessage - sizeof(MemMessage);
+	BYTE* ReadLocation = ((BYTE*)m_InHeader) + sizeof(SharedMemQHeader) + m_InHeader->m_OffsetToEndOfLastMessage - sizeof(MemMessage::m_DataSize);
+	DWORD MsgSize = *(DWORD*)ReadLocation;
+	ReadLocation -= MsgSize;
 
-	memcpy(Msg.m_Data, ReadLocation, sizeof(MemMessage));
-	m_InHeader->m_OffsetToEndOfLastMessage -= sizeof(MemMessage);
+	Msg.m_Data.resize(MsgSize);
+	memcpy(&Msg.m_Data[0], ReadLocation, MsgSize);
+	Msg.m_DataSize = MsgSize;
+
+	m_InHeader->m_OffsetToEndOfLastMessage -= MsgSize + sizeof(MemMessage::m_DataSize);
 	m_InHeader->m_MessageCount--;
 	return true;
 }
