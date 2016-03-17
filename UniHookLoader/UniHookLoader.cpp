@@ -8,12 +8,13 @@
 #include <iostream>
 enum Options
 {
-	OpenProc,
-	Inject,
-	ListSubroutines,
-	HookSubroutineAtIndex,
-	HookSubAtAddress,
-	Exit,
+	OpenProc, //Open an existing process
+	Inject,   //Inject into the process opened by OpenProc
+	OpenProcPath, //Launch not yet open process
+	ListSubroutines,  //List subroutines in the injected process
+	HookSubroutineAtIndex,  //Hook subroutine at index from ListSubs
+	HookSubAtAddress, //Hook subroutine at address
+	Exit, //Close injector
 	Help
 };
 
@@ -28,8 +29,19 @@ void ExecuteCommands(std::vector<Command>& Commands)
 		if (Cmd.m_EnumID == Options::OpenProc)
 			WindowsInjector.OpenTarget(StringToWString(Cmd.m_ParamOut));
 
+		if (Cmd.m_EnumID == Options::OpenProcPath)
+			WindowsInjector.OpenTargetPath(StringToWString(Cmd.m_ParamOut));
+
 		if (Cmd.m_EnumID == Options::Inject)
+		{
 			WindowsInjector.Inject(StringToWString(Cmd.m_ParamOut));
+			MemServer.WaitForMessage();
+			MemMessage Msg;
+			if (MemServer.PopMessage(Msg))
+				printf("[+] %s\n", &Msg.m_Data[0]);
+			else
+				printf("[+] Dll IPC Failed\n");
+		}
 
 		if (Cmd.m_EnumID == Options::Help)
 			printf("-openproc -p <Name of process.exe>\n"
@@ -43,6 +55,13 @@ void ExecuteCommands(std::vector<Command>& Commands)
 		{
 			printf("Sending Message to Dll: ListSubs\n");
 			MemServer.PushMessage(MemMessage("ListSubs"));
+
+			MemServer.WaitForMessage();
+			MemMessage Msg;
+			while (MemServer.PopMessage(Msg))
+			{
+				printf("From Client:%s\n", &Msg.m_Data[0]);
+			}
 		}
 
 		if (Cmd.m_EnumID == Options::HookSubAtAddress)
@@ -50,6 +69,13 @@ void ExecuteCommands(std::vector<Command>& Commands)
 			printf("Sending Message to Dll: Hook At Address\n");
 			std::string Msg(std::string("HookAtAddr:") + Cmd.m_ParamOut);
 			MemServer.PushMessage(MemMessage(Msg));
+
+			MemServer.WaitForMessage();
+			MemMessage MsgOut;
+			if(MemServer.PopMessage(MsgOut))
+				printf("[+] %s\n", &MsgOut.m_Data[0]);
+			else
+				printf("[+] Hook Function Failed\n");
 		}
 
 		if (Cmd.m_EnumID == Options::HookSubroutineAtIndex)
@@ -57,13 +83,20 @@ void ExecuteCommands(std::vector<Command>& Commands)
 			printf("Sending Message to Dll: Hook At Index\n");
 			std::string Msg(std::string("HookAtIndex:") + Cmd.m_ParamOut);
 			MemServer.PushMessage(MemMessage(Msg));
+
+			MemServer.WaitForMessage();
+			MemMessage MsgOut;
+			if (MemServer.PopMessage(MsgOut))
+				printf("[+] %s\n", &MsgOut.m_Data[0]);
+			else
+				printf("[+] Hook Function Failed\n");
 		}
 	}
 }
 
 int main(int argc,char* argv[])
 {
-	MemServer.PushMessage(MemMessage("IPC Mechanism Initialized!"));
+	MemServer.PushMessage(MemMessage("IPC Connection Initialized!"));
 
 	//Read Command Line Arguments, then execute if found
 	CmdLineParser Parser(argc, argv);
@@ -74,6 +107,7 @@ int main(int argc,char* argv[])
 	Parser.RegisterArgs(Options::HookSubAtAddress, "-hsa", "-hooksuba", Parameter::STRING);
 	Parser.RegisterArgs(Options::HookSubroutineAtIndex, "-hsi", "-hooksubi", Parameter::STRING);
 	Parser.RegisterArgs(Options::Exit, "-x", "-exit", Parameter::NONE);
+	Parser.RegisterArgs(Options::OpenProcPath, "-pp", "-openprocpath", Parameter::STRING);
 	Parser.Parse();
 	ExecuteCommands(Parser.GetFoundArgs());
 
@@ -86,13 +120,6 @@ int main(int argc,char* argv[])
 		Parser.ResetArguments(split(Input, " "));
 		Parser.Parse();
 		ExecuteCommands(Parser.GetFoundArgs());
-
-		MemServer.WaitForMessage();
-		MemMessage Msg;
-		while (MemServer.PopMessage(Msg))
-		{
-			printf("From Client:%s\n", &Msg.m_Data[0]);
-		}
 	} while (!ShouldExit);
     return 0;
 }

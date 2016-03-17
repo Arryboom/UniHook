@@ -31,6 +31,20 @@ bool Injector::OpenTarget(const std::wstring& ProcessName)
 	return false;
 }
 
+bool Injector::OpenTargetPath(const std::wstring& ProcessPath)
+{
+	STARTUPINFOW si;
+	PROCESS_INFORMATION pi;
+
+	ZeroMemory(&si, sizeof(si));
+	ZeroMemory(&pi, sizeof(pi));
+	si.cb = sizeof(si);
+	if (!CreateProcessW(ProcessPath.c_str(), NULL, 0, 0, false, CREATE_NEW_CONSOLE, 0, NULL, &si, &pi))
+		return false;
+	OpenTarget(pi.dwProcessId);
+	return true;
+}
+
 bool Injector::Inject(const std::wstring& DllPath)
 {
 	if (m_Target == NULL)
