@@ -15,6 +15,7 @@ public:
 	~Injector();
 	bool OpenTarget(DWORD PID);
 	bool OpenTarget(const std::wstring& ProcessName);
+	bool OpenTargetPath(const std::wstring& ProcessPath);
 	bool Inject(const std::wstring& DllPath);
 private:
 	std::vector<Process> GetProcessList();
