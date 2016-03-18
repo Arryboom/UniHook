@@ -14,6 +14,7 @@ enum Options
 	ListSubroutines,  //List subroutines in the injected process
 	HookSubroutineAtIndex,  //Hook subroutine at index from ListSubs
 	HookSubAtAddress, //Hook subroutine at address
+	HookSubMultiple, //Hook multiple subroutines, pass it path to .txt file
 	Exit, //Close injector
 	Help
 };
@@ -22,19 +23,37 @@ enum Options
 SharedMemQueue MemServer("Local\\UniHook_IPC", 100000, SharedMemQueue::Mode::Server);
 Injector WindowsInjector;
 bool ShouldExit = false;
+void PrintDllMessages()
+{
+	MemServer.WaitForMessage();
+	MemMessage Msg;
+	while (MemServer.PopMessage(Msg))
+	{
+		printf("From Client:%s\n", &Msg.m_Data[0]);
+	}
+}
+
 void ExecuteCommands(std::vector<Command>& Commands)
 {
+	bool WaitForMsg = true;
 	for (Command Cmd : Commands)
 	{
 		if (Cmd.m_EnumID == Options::OpenProc)
+		{
 			WindowsInjector.OpenTarget(StringToWString(Cmd.m_ParamOut));
+			WaitForMsg = false;
+		}
 
-		if (Cmd.m_EnumID == Options::OpenProcPath)
+		else if (Cmd.m_EnumID == Options::OpenProcPath)
+		{
 			WindowsInjector.OpenTargetPath(StringToWString(Cmd.m_ParamOut));
+			WaitForMsg = false;
+		}
 
-		if (Cmd.m_EnumID == Options::Inject)
+		else if (Cmd.m_EnumID == Options::Inject)
 		{
 			WindowsInjector.Inject(StringToWString(Cmd.m_ParamOut));
+			WaitForMsg = false;
 			MemServer.WaitForMessage();
 			MemMessage Msg;
 			if (MemServer.PopMessage(Msg))
@@ -43,55 +62,51 @@ void ExecuteCommands(std::vector<Command>& Commands)
 				printf("[+] Dll IPC Failed\n");
 		}
 
-		if (Cmd.m_EnumID == Options::Help)
+		else if (Cmd.m_EnumID == Options::Help)
+		{
 			printf("-openproc -p <Name of process.exe>\n"
 				"-inject   -i <Path to dll, include .dll>\n");
+			WaitForMsg = false;
+		}
 
-		if (Cmd.m_EnumID == Options::Exit)
+		else if (Cmd.m_EnumID == Options::Exit)
+		{
 			ShouldExit = true;
+			WaitForMsg = false;
+		}
 
 		//Commands below here are sent to our dll
-		if (Cmd.m_EnumID == Options::ListSubroutines)
+		else if (Cmd.m_EnumID == Options::ListSubroutines)
 		{
 			printf("Sending Message to Dll: ListSubs\n");
 			MemServer.PushMessage(MemMessage("ListSubs"));
-
-			MemServer.WaitForMessage();
-			MemMessage Msg;
-			while (MemServer.PopMessage(Msg))
-			{
-				printf("From Client:%s\n", &Msg.m_Data[0]);
-			}
 		}
 
-		if (Cmd.m_EnumID == Options::HookSubAtAddress)
+		else if (Cmd.m_EnumID == Options::HookSubAtAddress)
 		{
 			printf("Sending Message to Dll: Hook At Address\n");
-			std::string Msg(std::string("HookAtAddr:") + Cmd.m_ParamOut);
+			std::string Msg(std::string("HookAtAddr[:.") + Cmd.m_ParamOut);
 			MemServer.PushMessage(MemMessage(Msg));
-
-			MemServer.WaitForMessage();
-			MemMessage MsgOut;
-			if(MemServer.PopMessage(MsgOut))
-				printf("[+] %s\n", &MsgOut.m_Data[0]);
-			else
-				printf("[+] Hook Function Failed\n");
 		}
 
-		if (Cmd.m_EnumID == Options::HookSubroutineAtIndex)
+		else if (Cmd.m_EnumID == Options::HookSubroutineAtIndex)
 		{
 			printf("Sending Message to Dll: Hook At Index\n");
-			std::string Msg(std::string("HookAtIndex:") + Cmd.m_ParamOut);
+			std::string Msg(std::string("HookAtIndex[:.") + Cmd.m_ParamOut);
 			MemServer.PushMessage(MemMessage(Msg));
+		}
 
-			MemServer.WaitForMessage();
-			MemMessage MsgOut;
-			if (MemServer.PopMessage(MsgOut))
-				printf("[+] %s\n", &MsgOut.m_Data[0]);
-			else
-				printf("[+] Hook Function Failed\n");
+		else if (Cmd.m_EnumID == Options::HookSubMultiple)
+		{
+			printf("Sending Message to Dll: Hook Multiple Subroutines\n");
+			std::string Msg(std::string("HookMultiple[:.") + Cmd.m_ParamOut);
+			MemServer.PushMessage(MemMessage(Msg));
+		}else {
+			WaitForMsg = false; //No Command sent, so no messages
 		}
 	}
+	if (WaitForMsg)
+		PrintDllMessages();
 }
 
 int main(int argc,char* argv[])
@@ -108,6 +123,7 @@ int main(int argc,char* argv[])
 	Parser.RegisterArgs(Options::HookSubroutineAtIndex, "-hsi", "-hooksubi", Parameter::STRING);
 	Parser.RegisterArgs(Options::Exit, "-x", "-exit", Parameter::NONE);
 	Parser.RegisterArgs(Options::OpenProcPath, "-pp", "-openprocpath", Parameter::STRING);
+	Parser.RegisterArgs(Options::HookSubMultiple, "-hsm", "-hookmultiple", Parameter::STRING);
 	Parser.Parse();
 	ExecuteCommands(Parser.GetFoundArgs());
 
