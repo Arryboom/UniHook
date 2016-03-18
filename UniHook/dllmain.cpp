@@ -2,6 +2,8 @@
 // git subtree pull --prefix=PolyHook PolyHook master --squash
 #include <Windows.h>
 #include <stdio.h>
+#include <fstream>
+#include <sstream>
 #include "Tools.h"
 #include "../PolyHook/PolyHook/PolyHook.h"
 #include "Dissassembly/DissasemblyRoutines.h"
@@ -21,7 +23,9 @@ enum class HookMethod
 
 #ifdef _WIN64
 	#include "HookHandler64.h"
+#define StrToAddress(x) strtoll(x,NULL,16)
 #else
+#define StrToAddress(x) strtol(x,NULL,16)
 	#include "HookHandler86.h"
 #endif
 PDBReader m_PDBReader;
@@ -48,39 +52,42 @@ __declspec(noinline) volatile void FindSubRoutines()
 		cPrint("[+] Found Section: %s [%p - %p]\n", SectionHeader[i].Name, SectionStart, SectionEnd);
 
 		Results = m_InsSearcher.SearchForInstruction(INSType::CALL, SectionStart, SectionEnd);
-
-		MemClient->ManualLock();
-		auto CloseLock = PLH::finally([&] {
-			//Ensures we close lock even with exceptions
-			MemClient->ManualUnlock();
-		});
-		for (int j = 0; j < Results.size();j++)
-		{
-			SearchResult SubRoutine = Results[j];
-			
-			std::string ResolvedName;
-			if (m_PDBReader.Enumerate(SubRoutine.GetCallDestination(), ResolvedName))
-			{
-				cPrint("[+] Found Subroutine [%d] at: [%p] [%s]\n", j, SubRoutine.GetCallDestination(), ResolvedName.c_str());
-				
-				MemMessage Msg("[%d] at: [%p] [%s]", j, SubRoutine.GetCallDestination(), ResolvedName.c_str());
-				MemClient->PushMessage(Msg,true);
-			}else {
-				cPrint("[+] Found Subroutine [%d] at: [%p] [%s]\n", j, SubRoutine.GetCallDestination(), " ");
-
-				MemMessage Msg("[%d] at: [%p] [%s]", j, SubRoutine.GetCallDestination(), " ");
-				MemClient->PushMessage(Msg,true);
-			}
-		}
-		cPrint("[+] Found: %d Subroutines\n", Results.size());
-		MemMessage Msg("Found %d Subroutines", Results.size());
-		MemClient->PushMessage(Msg,true);
 	}
+}
+
+void PrintFoundSubs()
+{
+	MemClient->ManualLock();
+	auto CloseLock = PLH::finally([&] {
+		//Ensures we close lock even with exceptions
+		MemClient->ManualUnlock();
+	});
+	for (int j = 0; j < Results.size(); j++)
+	{
+		SearchResult SubRoutine = Results[j];
+
+		std::string ResolvedName;
+		if (m_PDBReader.Enumerate(SubRoutine.GetCallDestination(), ResolvedName))
+		{
+			cPrint("[+] Found Subroutine [%d] at: [%p] [%s]\n", j, SubRoutine.GetCallDestination(), ResolvedName.c_str());
+
+			MemMessage Msg("[%d] at: [%p] [%s]", j, SubRoutine.GetCallDestination(), ResolvedName.c_str());
+			MemClient->PushMessage(Msg, true);
+		}else {
+			cPrint("[+] Found Subroutine [%d] at: [%p] [%s]\n", j, SubRoutine.GetCallDestination(), " ");
+
+			MemMessage Msg("[%d] at: [%p] [%s]", j, SubRoutine.GetCallDestination(), " ");
+			MemClient->PushMessage(Msg, true);
+		}
+	}
+	cPrint("[+] Found: %d Subroutines\n", Results.size());
+	MemMessage Msg("Found %d Subroutines", Results.size());
+	MemClient->PushMessage(Msg, true);
 }
 
 DWORD WINAPI InitThread(LPVOID lparam)
 {
-	//CreateConsole();
+	CreateConsole();
 	MemClient.reset(new SharedMemQueue("Local\\UniHook_IPC", 100000, SharedMemQueue::Mode::Client));
 	MemMessage Msg;
 	if (MemClient->PopMessage(Msg))
@@ -104,10 +111,12 @@ DWORD WINAPI InitThread(LPVOID lparam)
 		{
 			cPrint("[+] Executing Command: %s\n", Cmd.c_str());
 			FindSubRoutines();
+			PrintFoundSubs();
 		}
 
+
 		//These types of messages have two parts, split by :
-		std::vector<std::string> SplitCmd = split(Cmd, ":");
+		std::vector<std::string> SplitCmd = split(Cmd, "[:.");
 		if (SplitCmd.size() == 2)
 		{
 			if (strcmp(SplitCmd[0].c_str(), "HookAtIndex") == 0)
@@ -124,16 +133,43 @@ DWORD WINAPI InitThread(LPVOID lparam)
 			}
 			else if (strcmp(SplitCmd[0].c_str(), "HookAtAddr") == 0)
 			{
-#ifdef _WIN64
-				DWORD64 Address = strtoll(SplitCmd[1].c_str(), NULL, 16);
-#else
-				DWORD Address = strtol(SplitCmd[1].c_str(), NULL, 16);
-#endif
+				DWORD_PTR Address = StrToAddress(SplitCmd[1].c_str());
+
 				cPrint("[+] Hooking Function:%p\n", Address);
 				HookFunctionAtRuntime((BYTE*)Address, HookMethod::INLINE);
 
 				MemMessage Msg("Hooking Function at:%p", Address);
 				MemClient->PushMessage(Msg);
+			}
+			else if (strcmp(SplitCmd[0].c_str(), "HookMultiple") == 0)
+			{
+				//Remove quotes from path
+				std::string path = SplitCmd[1];
+				path.erase(std::remove(path.begin(), path.end(), '"'), path.end());
+
+				std::ifstream File(path);
+				std::string line;
+				while (std::getline(File, line))
+				{
+					std::vector<std::string> Split = split(line, " ");
+					if(Split.size() != 2)
+						continue;
+
+					if (strcmp(Split[0].c_str(), "Index") == 0)
+					{
+						int Index = atoi(Split[1].c_str());
+						if (Results.size() < 1)
+							FindSubRoutines();
+
+						cPrint("Index:%d\n", Index);
+						HookFunctionAtRuntime((BYTE*)Results[Index].GetCallDestination(), HookMethod::INLINE);
+					}
+					else if (strcmp(Split[0].c_str(), "Address") == 0)
+					{
+						cPrint("Address:%p\n",StrToAddress(Split[1].c_str()));
+						HookFunctionAtRuntime((BYTE*)StrToAddress(Split[1].c_str()), HookMethod::INLINE);
+					}
+				}
 			}
 		}
 	} while (1);
