@@ -78,12 +78,14 @@ void ExecuteCommands(std::vector<Command>& Commands)
 		//Commands below here are sent to our dll
 		else if (Cmd.m_EnumID == Options::ListSubroutines)
 		{
+			WaitForMsg = true;
 			printf("Sending Message to Dll: ListSubs\n");
 			MemServer.PushMessage(MemMessage("ListSubs"));
 		}
 
 		else if (Cmd.m_EnumID == Options::HookSubAtAddress)
 		{
+			WaitForMsg = true;
 			printf("Sending Message to Dll: Hook At Address\n");
 			std::string Msg(std::string("HookAtAddr[:.") + Cmd.m_ParamOut);
 			MemServer.PushMessage(MemMessage(Msg));
@@ -91,6 +93,7 @@ void ExecuteCommands(std::vector<Command>& Commands)
 
 		else if (Cmd.m_EnumID == Options::HookSubroutineAtIndex)
 		{
+			WaitForMsg = true;
 			printf("Sending Message to Dll: Hook At Index\n");
 			std::string Msg(std::string("HookAtIndex[:.") + Cmd.m_ParamOut);
 			MemServer.PushMessage(MemMessage(Msg));
@@ -98,6 +101,7 @@ void ExecuteCommands(std::vector<Command>& Commands)
 
 		else if (Cmd.m_EnumID == Options::HookSubMultiple)
 		{
+			WaitForMsg = true;
 			printf("Sending Message to Dll: Hook Multiple Subroutines\n");
 			std::string Msg(std::string("HookMultiple[:.") + Cmd.m_ParamOut);
 			MemServer.PushMessage(MemMessage(Msg));

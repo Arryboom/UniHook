@@ -87,13 +87,13 @@ void PrintFoundSubs()
 
 DWORD WINAPI InitThread(LPVOID lparam)
 {
-	CreateConsole();
+	//CreateConsole();
 	MemClient.reset(new SharedMemQueue("Local\\UniHook_IPC", 100000, SharedMemQueue::Mode::Client));
 	MemMessage Msg;
 	if (MemClient->PopMessage(Msg))
-		printf("%s\n", &Msg.m_Data[0]);
+		cPrint("%s\n", &Msg.m_Data[0]);
 	else
-		printf("[+] IPC FAILED");
+		cPrint("[+] IPC FAILED");
 	MemClient->PushMessage(MemMessage("Dll Injected, IPC Connected"));
 
 	//m_PDBReader.LoadFile("C:\\Users\\Steve\\Desktop\\Testing.pdb");
