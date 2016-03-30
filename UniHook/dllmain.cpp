@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <fstream>
 #include <sstream>
+
+#define USE_OUTPUT 0
+
 #include "Tools.h"
 #include "../PolyHook/PolyHook/PolyHook.h"
 #include "Dissassembly/DissasemblyRoutines.h"

@@ -6,11 +6,14 @@
 #include "../Common/IPC/SharedMemQueue.h"
 #include "../Common/Utilities.h"
 #include <iostream>
+
+#define USE_STDIN 1
 enum Options
 {
 	OpenProc, //Open an existing process
 	Inject,   //Inject into the process opened by OpenProc
 	OpenProcPath, //Launch not yet open process
+	ProcExit, //Kills the process that was opened
 	ListSubroutines,  //List subroutines in the injected process
 	HookSubroutineAtIndex,  //Hook subroutine at index from ListSubs
 	HookSubAtAddress, //Hook subroutine at address
@@ -47,6 +50,12 @@ void ExecuteCommands(std::vector<Command>& Commands)
 		else if (Cmd.m_EnumID == Options::OpenProcPath)
 		{
 			WindowsInjector.OpenTargetPath(StringToWString(Cmd.m_ParamOut));
+			WaitForMsg = false;
+		}
+
+		else if (Cmd.m_EnumID == Options::ProcExit)
+		{
+			WindowsInjector.KillTarget();
 			WaitForMsg = false;
 		}
 
@@ -121,15 +130,20 @@ int main(int argc,char* argv[])
 	CmdLineParser Parser(argc, argv);
 	Parser.RegisterArgs(Options::OpenProc,"-p", "-openproc", Parameter::STRING);
 	Parser.RegisterArgs(Options::Inject,"-i", "-inject", Parameter::STRING);
+	Parser.RegisterArgs(Options::ProcExit, "-pe", "-procexit", Parameter::NONE);
 	Parser.RegisterArgs(Options::Help, "-h", "-help", Parameter::NONE);
 	Parser.RegisterArgs(Options::ListSubroutines, "-ls", "-listsubs", Parameter::NONE);
 	Parser.RegisterArgs(Options::HookSubAtAddress, "-hsa", "-hooksuba", Parameter::STRING);
 	Parser.RegisterArgs(Options::HookSubroutineAtIndex, "-hsi", "-hooksubi", Parameter::STRING);
 	Parser.RegisterArgs(Options::Exit, "-x", "-exit", Parameter::NONE);
 	Parser.RegisterArgs(Options::OpenProcPath, "-pp", "-openprocpath", Parameter::STRING);
-	Parser.RegisterArgs(Options::HookSubMultiple, "-hsm", "-hookmultiple", Parameter::STRING);
+	Parser.RegisterArgs(Options::HookSubMultiple, "-hsm", "-hooksubm", Parameter::STRING);
 	Parser.Parse();
 	ExecuteCommands(Parser.GetFoundArgs());
+
+#if !USE_STDIN
+	return 0;
+#endif
 
 	do 
 	{
