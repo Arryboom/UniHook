@@ -38,31 +38,27 @@ void PrintDllMessages()
 
 void ExecuteCommands(std::vector<Command>& Commands)
 {
-	bool WaitForMsg = true;
+	bool ExitTarget = false;
 	for (Command Cmd : Commands)
 	{
 		if (Cmd.m_EnumID == Options::OpenProc)
 		{
 			WindowsInjector.OpenTarget(StringToWString(Cmd.m_ParamOut));
-			WaitForMsg = false;
 		}
 
 		else if (Cmd.m_EnumID == Options::OpenProcPath)
 		{
 			WindowsInjector.OpenTargetPath(StringToWString(Cmd.m_ParamOut));
-			WaitForMsg = false;
 		}
 
 		else if (Cmd.m_EnumID == Options::ProcExit)
 		{
-			WindowsInjector.KillTarget();
-			WaitForMsg = false;
+			ExitTarget = true;
 		}
 
 		else if (Cmd.m_EnumID == Options::Inject)
 		{
 			WindowsInjector.Inject(StringToWString(Cmd.m_ParamOut));
-			WaitForMsg = false;
 			MemServer.WaitForMessage();
 			MemMessage Msg;
 			if (MemServer.PopMessage(Msg))
@@ -75,51 +71,47 @@ void ExecuteCommands(std::vector<Command>& Commands)
 		{
 			printf("-openproc -p <Name of process.exe>\n"
 				"-inject   -i <Path to dll, include .dll>\n");
-			WaitForMsg = false;
 		}
 
 		else if (Cmd.m_EnumID == Options::Exit)
 		{
 			ShouldExit = true;
-			WaitForMsg = false;
 		}
 
 		//Commands below here are sent to our dll
 		else if (Cmd.m_EnumID == Options::ListSubroutines)
 		{
-			WaitForMsg = true;
 			printf("Sending Message to Dll: ListSubs\n");
 			MemServer.PushMessage(MemMessage("ListSubs"));
+			PrintDllMessages();
 		}
 
 		else if (Cmd.m_EnumID == Options::HookSubAtAddress)
 		{
-			WaitForMsg = true;
 			printf("Sending Message to Dll: Hook At Address\n");
 			std::string Msg(std::string("HookAtAddr[:.") + Cmd.m_ParamOut);
 			MemServer.PushMessage(MemMessage(Msg));
+			PrintDllMessages();
 		}
 
 		else if (Cmd.m_EnumID == Options::HookSubroutineAtIndex)
 		{
-			WaitForMsg = true;
 			printf("Sending Message to Dll: Hook At Index\n");
 			std::string Msg(std::string("HookAtIndex[:.") + Cmd.m_ParamOut);
 			MemServer.PushMessage(MemMessage(Msg));
+			PrintDllMessages();
 		}
 
 		else if (Cmd.m_EnumID == Options::HookSubMultiple)
 		{
-			WaitForMsg = true;
 			printf("Sending Message to Dll: Hook Multiple Subroutines\n");
 			std::string Msg(std::string("HookMultiple[:.") + Cmd.m_ParamOut);
 			MemServer.PushMessage(MemMessage(Msg));
-		}else {
-			WaitForMsg = false; //No Command sent, so no messages
+			PrintDllMessages();
 		}
 	}
-	if (WaitForMsg)
-		PrintDllMessages();
+	if(ExitTarget)
+		WindowsInjector.KillTarget();
 }
 
 int main(int argc,char* argv[])
