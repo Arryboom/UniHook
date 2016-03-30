@@ -17,6 +17,7 @@ public:
 	bool OpenTarget(const std::wstring& ProcessName);
 	bool OpenTargetPath(const std::wstring& ProcessPath);
 	bool Inject(const std::wstring& DllPath);
+	bool KillTarget();
 private:
 	std::vector<Process> GetProcessList();
 	HANDLE m_Target;
