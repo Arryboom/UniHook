@@ -31,6 +31,11 @@ bool Injector::OpenTarget(const std::wstring& ProcessName)
 	return false;
 }
 
+bool Injector::KillTarget()
+{
+	return TerminateProcess(m_Target, 0) == 0 ? false:true;
+}
+
 bool Injector::OpenTargetPath(const std::wstring& ProcessPath)
 {
 	STARTUPINFOW si;
@@ -74,9 +79,18 @@ bool Injector::Inject(const std::wstring& DllPath)
 	if (hThread == NULL)
 		return false;
 
-	DWORD WaitState = WaitForSingleObject(hThread, 5000);
-	CloseHandle(hThread);
-	return (WaitState == WAIT_OBJECT_0) ? true:false;
+	auto CloseRemotThrd = finally([&]() {
+		CloseHandle(hThread);
+	});
+
+	if (WaitForSingleObject(hThread, 5000) != WAIT_OBJECT_0)
+		return false;
+
+	DWORD ExitCode;
+	if (GetExitCodeThread(hThread, &ExitCode) == 0)
+		return false;
+
+	return true;
 }
 
 std::vector<Process> Injector::GetProcessList()

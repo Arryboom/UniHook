@@ -37,6 +37,9 @@ void cPrint(char* lpszFormat, ...)
 	char szBuffer[512];
 	nBuf = _vsnprintf_s(szBuffer, 511, lpszFormat, args);
 	va_end(args);
+#if !USE_OUTPUT
+	return;
+#endif
 	DWORD CharsWritten = 0;
 	WriteConsole(hConsoleWrite, szBuffer, nBuf, &CharsWritten, NULL);
 }
