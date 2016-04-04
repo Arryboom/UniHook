@@ -148,8 +148,9 @@ bool SharedMemQueue::PushMessage(MemMessage Msg,bool ManualLocking)
 
 	BYTE* WriteLocation = ((BYTE*)m_OutHeader) + sizeof(SharedMemQHeader) + m_OutHeader->m_OffsetToEndOfLastMessage;
 
+    //sizeof(DWORD) = sizeof(MemMessage::m_DataSize), Qt doesn't like that syntax
 	//Make sure we don't overrun our buffer
-	DWORD_PTR Delta = (WriteLocation + Msg.m_DataSize + sizeof(MemMessage::m_DataSize)) - m_Buffer;
+    intptr_t Delta = (WriteLocation + Msg.m_DataSize + sizeof(DWORD)) - m_Buffer;
 	if (Delta >= m_BufSize)
 		return false;
 
@@ -160,7 +161,7 @@ bool SharedMemQueue::PushMessage(MemMessage Msg,bool ManualLocking)
 	//Write the message size
 	*(DWORD*)WriteLocation = Msg.m_DataSize;
 	
-	m_OutHeader->m_OffsetToEndOfLastMessage += Msg.m_DataSize + sizeof(MemMessage::m_DataSize);
+    m_OutHeader->m_OffsetToEndOfLastMessage += Msg.m_DataSize + sizeof(DWORD);
 	m_OutHeader->m_MessageCount++;
 	return true;
 }
@@ -174,7 +175,7 @@ bool SharedMemQueue::PopMessage(MemMessage& Msg)
 	if (m_InHeader->m_MessageCount < 1)
 		return false;
 
-	BYTE* ReadLocation = ((BYTE*)m_InHeader) + sizeof(SharedMemQHeader) + m_InHeader->m_OffsetToEndOfLastMessage - sizeof(MemMessage::m_DataSize);
+    BYTE* ReadLocation = ((BYTE*)m_InHeader) + sizeof(SharedMemQHeader) + m_InHeader->m_OffsetToEndOfLastMessage - sizeof(DWORD);
 	
 	//Get size of message data
 	DWORD MsgSize = *(DWORD*)ReadLocation;
@@ -189,7 +190,7 @@ bool SharedMemQueue::PopMessage(MemMessage& Msg)
 	//Set the size of the message in the struct
 	Msg.m_DataSize = MsgSize;
 
-	m_InHeader->m_OffsetToEndOfLastMessage -= MsgSize + sizeof(MemMessage::m_DataSize);
+    m_InHeader->m_OffsetToEndOfLastMessage -= MsgSize + sizeof(DWORD);
 	m_InHeader->m_MessageCount--;
 	return true;
 }
