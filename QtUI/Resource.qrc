@@ -1,0 +1,24 @@
+<RCC>
+    <qresource prefix="/Images">
+        <file>Images/accept.png</file>
+        <file>Images/add.png</file>
+        <file>Images/bullet_add.png</file>
+        <file>Images/bullet_black.png</file>
+        <file>Images/bullet_blue.png</file>
+        <file>Images/bullet_go.png</file>
+        <file>Images/bullet_minus.png</file>
+        <file>Images/bullet_orange.png</file>
+        <file>Images/bullet_pink.png</file>
+        <file>Images/bullet_plus.png</file>
+        <file>Images/bullet_purple.png</file>
+        <file>Images/bullet_red.png</file>
+        <file>Images/clipboard.png</file>
+        <file>Images/error.png</file>
+        <file>Images/exclamation.png</file>
+        <file>Images/find.png</file>
+        <file>Images/information.png</file>
+        <file>Images/settings.png</file>
+        <file>Images/wrench.png</file>
+        <file>Images/small.ico</file>
+    </qresource>
+</RCC>
