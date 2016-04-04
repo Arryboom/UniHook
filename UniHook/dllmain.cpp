@@ -72,19 +72,23 @@ void PrintFoundSubs()
 		std::string ResolvedName;
 		if (m_PDBReader.Enumerate(SubRoutine.GetCallDestination(), ResolvedName))
 		{
-			cPrint("[+] Found Subroutine [%d] at: [%p] [%s]\n", j, SubRoutine.GetCallDestination(), ResolvedName.c_str());
+			//cPrint("[+] Found Subroutine [%d] at: [%p] [%s]\n", j, SubRoutine.GetCallDestination(), ResolvedName.c_str());
 
-			MemMessage Msg("[%d] at: [%p] [%s]", j, SubRoutine.GetCallDestination(), ResolvedName.c_str());
+			//MemMessage Msg("[%d] at: [%p] [%s]", j, SubRoutine.GetCallDestination(), ResolvedName.c_str());
+			MemMessage Msg("0|%d|%I64X|%s", j, SubRoutine.GetCallDestination(), ResolvedName.c_str());
+
 			MemClient->PushMessage(Msg, true);
-		}else {
-			cPrint("[+] Found Subroutine [%d] at: [%p] [%s]\n", j, SubRoutine.GetCallDestination(), " ");
+		}
+		else {
+			//cPrint("[+] Found Subroutine [%d] at: [%p] [%s]\n", j, SubRoutine.GetCallDestination(), " ");
 
-			MemMessage Msg("[%d] at: [%p] [%s]", j, SubRoutine.GetCallDestination(), " ");
+			//MemMessage Msg("[%d] at: [%p] [%s]", j, SubRoutine.GetCallDestination(), " ");
+			MemMessage Msg("0|%d|%I64X|%s", j, SubRoutine.GetCallDestination(), " ");
 			MemClient->PushMessage(Msg, true);
 		}
 	}
 	cPrint("[+] Found: %d Subroutines\n", Results.size());
-	MemMessage Msg("Found %d Subroutines", Results.size());
+	MemMessage Msg("99|found %d Subroutines", Results.size());
 	MemClient->PushMessage(Msg, true);
 }
 
