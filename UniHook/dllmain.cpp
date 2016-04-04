@@ -92,96 +92,94 @@ void PrintFoundSubs()
 	MemClient->PushMessage(Msg, true);
 }
 
+void ParseAndExecuteCommands()
+{
+	MemMessage Msg;
+	if (!MemClient->PopMessage(Msg))
+		return;
+
+	//Convert message to string
+	std::string Cmd((char*)&Msg.m_Data[0], Msg.m_DataSize);
+	if (strcmp(Cmd.c_str(), "ListSubs") == 0)
+	{
+		cPrint("[+] Executing Command: %s\n", Cmd.c_str());
+		FindSubRoutines();
+		PrintFoundSubs();
+	}
+
+	//These types of messages have two parts, split by :
+	std::vector<std::string> SplitCmd = split(Cmd, "[:.");
+	if (SplitCmd.size() == 2)
+	{
+		if (strcmp(SplitCmd[0].c_str(), "HookAtIndex") == 0)
+		{
+			if (Results.size() < 1)
+				FindSubRoutines();
+
+			int Index = atoi(SplitCmd[1].c_str());
+			cPrint("[+] Hooking Function at index:%d\n", Index);
+			HookFunctionAtRuntime((BYTE*)Results[Index].GetCallDestination(), HookMethod::INLINE);
+
+			MemMessage Msg("Hooking Function at:%d", Index);
+			MemClient->PushMessage(Msg);
+		}
+		else if (strcmp(SplitCmd[0].c_str(), "HookAtAddr") == 0)
+		{
+			DWORD_PTR Address = StrToAddress(SplitCmd[1].c_str());
+
+			cPrint("[+] Hooking Function:%p\n", Address);
+			HookFunctionAtRuntime((BYTE*)Address, HookMethod::INLINE);
+
+			MemMessage Msg("Hooking Function at:%p", Address);
+			MemClient->PushMessage(Msg);
+		}
+		else if (strcmp(SplitCmd[0].c_str(), "HookMultiple") == 0)
+		{
+			//Remove quotes from path
+			std::string path = SplitCmd[1];
+			path.erase(std::remove(path.begin(), path.end(), '"'), path.end());
+
+			std::ifstream File(path);
+			std::string line;
+			while (std::getline(File, line))
+			{
+				std::vector<std::string> Split = split(line, " ");
+				if (Split.size() != 2)
+					continue;
+
+				if (strcmp(Split[0].c_str(), "Index") == 0)
+				{
+					int Index = atoi(Split[1].c_str());
+					if (Results.size() < 1)
+						FindSubRoutines();
+
+					cPrint("Index:%d\n", Index);
+					HookFunctionAtRuntime((BYTE*)Results[Index].GetCallDestination(), HookMethod::INLINE);
+				}
+				else if (strcmp(Split[0].c_str(), "Address") == 0)
+				{
+					cPrint("Address:%p\n", StrToAddress(Split[1].c_str()));
+					HookFunctionAtRuntime((BYTE*)StrToAddress(Split[1].c_str()), HookMethod::INLINE);
+				}
+			}
+		}
+	}
+}
+
+void ReceivedSharedMsg()
+{
+	ParseAndExecuteCommands();
+}
+
 DWORD WINAPI InitThread(LPVOID lparam)
 {
 #if USE_OUTPUT
 	CreateConsole();
 #endif
 	MemClient.reset(new SharedMemQueue("Local\\UniHook_IPC", 100000, SharedMemQueue::Mode::Client));
-	MemMessage Msg;
-	if (MemClient->PopMessage(Msg))
-		cPrint("%s\n", &Msg.m_Data[0]);
-	else
-		cPrint("[+] IPC FAILED");
-	MemClient->PushMessage(MemMessage("Dll Injected, IPC Connected"));
-
+	MemClient->SetCallback(ReceivedSharedMsg);
+	
 	//m_PDBReader.LoadFile("C:\\Users\\Steve\\Desktop\\Testing.pdb");
-
-	do 
-	{
-		MemClient->WaitForMessage();
-		MemMessage Msg;
-		if (!MemClient->PopMessage(Msg))
-			continue;
-
-		//Convert message to string
-		std::string Cmd((char*)&Msg.m_Data[0], Msg.m_DataSize);
-		if (strcmp(Cmd.c_str(), "ListSubs") == 0)
-		{
-			cPrint("[+] Executing Command: %s\n", Cmd.c_str());
-			FindSubRoutines();
-			PrintFoundSubs();
-		}
-
-
-		//These types of messages have two parts, split by :
-		std::vector<std::string> SplitCmd = split(Cmd, "[:.");
-		if (SplitCmd.size() == 2)
-		{
-			if (strcmp(SplitCmd[0].c_str(), "HookAtIndex") == 0)
-			{
-				if (Results.size() < 1)
-					FindSubRoutines();
-
-				int Index = atoi(SplitCmd[1].c_str());
-				cPrint("[+] Hooking Function at index:%d\n", Index);
-				HookFunctionAtRuntime((BYTE*)Results[Index].GetCallDestination(), HookMethod::INLINE);
-
-				MemMessage Msg("Hooking Function at:%d", Index);
-				MemClient->PushMessage(Msg);
-			}
-			else if (strcmp(SplitCmd[0].c_str(), "HookAtAddr") == 0)
-			{
-				DWORD_PTR Address = StrToAddress(SplitCmd[1].c_str());
-
-				cPrint("[+] Hooking Function:%p\n", Address);
-				HookFunctionAtRuntime((BYTE*)Address, HookMethod::INLINE);
-
-				MemMessage Msg("Hooking Function at:%p", Address);
-				MemClient->PushMessage(Msg);
-			}
-			else if (strcmp(SplitCmd[0].c_str(), "HookMultiple") == 0)
-			{
-				//Remove quotes from path
-				std::string path = SplitCmd[1];
-				path.erase(std::remove(path.begin(), path.end(), '"'), path.end());
-
-				std::ifstream File(path);
-				std::string line;
-				while (std::getline(File, line))
-				{
-					std::vector<std::string> Split = split(line, " ");
-					if(Split.size() != 2)
-						continue;
-
-					if (strcmp(Split[0].c_str(), "Index") == 0)
-					{
-						int Index = atoi(Split[1].c_str());
-						if (Results.size() < 1)
-							FindSubRoutines();
-
-						cPrint("Index:%d\n", Index);
-						HookFunctionAtRuntime((BYTE*)Results[Index].GetCallDestination(), HookMethod::INLINE);
-					}
-					else if (strcmp(Split[0].c_str(), "Address") == 0)
-					{
-						cPrint("Address:%p\n",StrToAddress(Split[1].c_str()));
-						HookFunctionAtRuntime((BYTE*)StrToAddress(Split[1].c_str()), HookMethod::INLINE);
-					}
-				}
-			}
-		}
-	} while (1);
 	return 1;
 }
 

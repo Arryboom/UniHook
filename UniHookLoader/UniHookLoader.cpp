@@ -7,7 +7,7 @@
 #include "../Common/Utilities.h"
 #include <iostream>
 
-#define USE_STDIN 0
+#define USE_STDIN 1
 enum Options
 {
 	OpenProc, //Open an existing process
@@ -28,7 +28,6 @@ Injector WindowsInjector;
 bool ShouldExit = false;
 void PrintDllMessages()
 {
-	MemServer.WaitForMessage();
 	MemMessage Msg;
 	while (MemServer.PopMessage(Msg))
 	{
@@ -59,12 +58,6 @@ void ExecuteCommands(std::vector<Command>& Commands)
 		else if (Cmd.m_EnumID == Options::Inject)
 		{
 			WindowsInjector.Inject(StringToWString(Cmd.m_ParamOut));
-			MemServer.WaitForMessage();
-			MemMessage Msg;
-			if (MemServer.PopMessage(Msg))
-				printf("[+] %s\n", &Msg.m_Data[0]);
-			else
-				printf("[+] Dll IPC Failed\n");
 		}
 
 		else if (Cmd.m_EnumID == Options::Help)
@@ -83,7 +76,6 @@ void ExecuteCommands(std::vector<Command>& Commands)
 		{
 			printf("Sending Message to Dll: ListSubs\n");
 			MemServer.PushMessage(MemMessage("ListSubs"));
-			PrintDllMessages();
 		}
 
 		else if (Cmd.m_EnumID == Options::HookSubAtAddress)
@@ -91,7 +83,6 @@ void ExecuteCommands(std::vector<Command>& Commands)
 			printf("Sending Message to Dll: Hook At Address\n");
 			std::string Msg(std::string("HookAtAddr[:.") + Cmd.m_ParamOut);
 			MemServer.PushMessage(MemMessage(Msg));
-			PrintDllMessages();
 		}
 
 		else if (Cmd.m_EnumID == Options::HookSubroutineAtIndex)
@@ -99,7 +90,6 @@ void ExecuteCommands(std::vector<Command>& Commands)
 			printf("Sending Message to Dll: Hook At Index\n");
 			std::string Msg(std::string("HookAtIndex[:.") + Cmd.m_ParamOut);
 			MemServer.PushMessage(MemMessage(Msg));
-			PrintDllMessages();
 		}
 
 		else if (Cmd.m_EnumID == Options::HookSubMultiple)
@@ -107,16 +97,21 @@ void ExecuteCommands(std::vector<Command>& Commands)
 			printf("Sending Message to Dll: Hook Multiple Subroutines\n");
 			std::string Msg(std::string("HookMultiple[:.") + Cmd.m_ParamOut);
 			MemServer.PushMessage(MemMessage(Msg));
-			PrintDllMessages();
 		}
 	}
 	if(ExitTarget)
 		WindowsInjector.KillTarget();
 }
 
+void ReceivedSharedMsg()
+{
+	PrintDllMessages();
+}
+
 int main(int argc,char* argv[])
 {
 	MemServer.PushMessage(MemMessage("IPC Connection Initialized!"));
+	MemServer.SetCallback(ReceivedSharedMsg);
 
 	//Read Command Line Arguments, then execute if found
 	CmdLineParser Parser(argc, argv);
@@ -136,8 +131,7 @@ int main(int argc,char* argv[])
 #if !USE_STDIN
 	return 0;
 #endif
-
-	do 
+	do
 	{
 		std::string Input;
 		std::cout << "Enter Command: ";
