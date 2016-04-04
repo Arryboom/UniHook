@@ -16,8 +16,7 @@ SOURCES += main.cpp\
         MainWindow.cpp \
     DlgProcessList.cpp \
     DlgMemory.cpp \
-    DlgFind.cpp \
-    ../UniHookLoader/Injector.cpp
+    DlgFind.cpp
 
 HEADERS  += MainWindow.h \
     DlgProcessList.h \
@@ -26,7 +25,6 @@ HEADERS  += MainWindow.h \
     DlgFind.h \
     ../Common/IPC/SharedMemQueue.h \
     ../Common/IPC/SharedMemMutex.h \
-    ../UniHookLoader/Injector.h \
     injector.h
 
 FORMS    += MainWindow.ui \
