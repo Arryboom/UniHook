@@ -22,7 +22,7 @@ SharedMemMutex::SharedMemMutex(const std::string& Name, Mode Type)
 	m_InitOk = true;
 
 	//Create mutex if it doesn't exist, join if it does
-	m_hMutex = CreateMutex(NULL, (Type == Mode::Server) ? FALSE : TRUE, Name.c_str());
+    m_hMutex = CreateMutexA(NULL, (Type == Mode::Server) ? FALSE : TRUE, Name.c_str());
 	if (m_hMutex == NULL)
 	{
 		m_InitOk = false;
