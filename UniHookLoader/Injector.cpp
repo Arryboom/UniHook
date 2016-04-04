@@ -2,7 +2,7 @@
 #include <TlHelp32.h>
 Injector::Injector()
 {
-
+	
 }
 
 Injector::~Injector()
@@ -68,7 +68,7 @@ bool Injector::Inject(const std::wstring& DllPath)
 	if (WriteProcessMemory(m_Target, Mem, DllPath.c_str(), PathLength, NULL) == FALSE)
 		return false;
 
-	void* LoadLibAddr = GetProcAddress(GetModuleHandle("kernel32.dll"), "LoadLibraryW");
+    void* LoadLibAddr = GetProcAddress(GetModuleHandleA("kernel32.dll"), "LoadLibraryW");
 	if (LoadLibAddr == NULL)
 		return false;
 
@@ -97,7 +97,8 @@ std::vector<Process> Injector::GetProcessList()
 {
 	PROCESSENTRY32W pe;
 	HANDLE thSnapShot;
-	BOOL CurProc, ProcFound = false;
+    BOOL CurProc = false;
+    BOOL ProcFound = false;
 	std::vector<Process> Processes;
 
 	thSnapShot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);

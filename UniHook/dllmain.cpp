@@ -5,7 +5,7 @@
 #include <fstream>
 #include <sstream>
 
-#define USE_OUTPUT 0
+#define USE_OUTPUT 1
 
 #include "Tools.h"
 #include "../PolyHook/PolyHook/PolyHook.h"
@@ -90,7 +90,9 @@ void PrintFoundSubs()
 
 DWORD WINAPI InitThread(LPVOID lparam)
 {
-	//CreateConsole();
+#if USE_OUTPUT
+	CreateConsole();
+#endif
 	MemClient.reset(new SharedMemQueue("Local\\UniHook_IPC", 100000, SharedMemQueue::Mode::Client));
 	MemMessage Msg;
 	if (MemClient->PopMessage(Msg))

@@ -7,7 +7,7 @@
 #include "../Common/Utilities.h"
 #include <iostream>
 
-#define USE_STDIN 1
+#define USE_STDIN 0
 enum Options
 {
 	OpenProc, //Open an existing process
