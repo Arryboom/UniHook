@@ -1,7 +1,9 @@
 #pragma once
 #include "SharedMemMutex.h"
+#include "SharedSignal.h"
 #include <mutex>
 
+DWORD WINAPI MsgThread(LPVOID lparam);
 struct MemMessage
 {
 	MemMessage(BYTE* Data,DWORD Size)
@@ -46,6 +48,7 @@ struct SharedMemQHeader
 class SharedMemQueue
 {
 public:
+	typedef void(*tMsgReceivedCallback)();
 	enum class Mode
 	{
 		Server,
@@ -53,6 +56,8 @@ public:
 	};
 	SharedMemQueue(const std::string& ServerName, const DWORD BufSize, Mode Type);
 	~SharedMemQueue();
+
+	void SetCallback(tMsgReceivedCallback Callback);
 
 	//For batch operations
 	void ManualLock();
@@ -72,14 +77,21 @@ private:
 	DWORD m_BufSize;
 	BYTE* m_Buffer;
 	HANDLE m_hMappedFile;
+	HANDLE m_hMsgThread;
+	SharedSignal m_ServerToClientSignal;
+	SharedSignal m_ClientToServerSignal;
+	Mode m_Type;
 	bool m_InitOk;
+	tMsgReceivedCallback m_ReceivedCallback;
 };
 
 SharedMemQueue::SharedMemQueue(const std::string& ServerName, const DWORD BufSize, Mode Type) :
-	m_Mutex(std::string(ServerName + "_MTX"), (Type == Mode::Server) ? SharedMemMutex::Mode::Server : SharedMemMutex::Mode::Client)
+	m_Mutex(std::string(ServerName + "_MTX"), (Type == Mode::Server) ? SharedMemMutex::Mode::Server : SharedMemMutex::Mode::Client),
+	m_ServerToClientSignal(std::string(ServerName+"_SC_SGNL")),m_ClientToServerSignal(std::string(ServerName+"_CS_SGNL"))
 {
 	m_InitOk = true;
 	m_BufSize = BufSize;
+	m_Type = Type;
 
 	if (Type == Mode::Server)
 	{
@@ -120,12 +132,19 @@ SharedMemQueue::SharedMemQueue(const std::string& ServerName, const DWORD BufSiz
 		m_InHeader = (SharedMemQHeader*)m_Buffer;
 		m_OutHeader = (SharedMemQHeader*)(m_Buffer + (BufSize/2));
 	}
+	m_hMsgThread = CreateThread(NULL, NULL, MsgThread, this, NULL, NULL);
 }
 
 SharedMemQueue::~SharedMemQueue()
 {
 	UnmapViewOfFile(m_Buffer);
 	CloseHandle(m_hMappedFile);
+	CloseHandle(m_hMsgThread);
+}
+
+void SharedMemQueue::SetCallback(tMsgReceivedCallback Callback)
+{
+	m_ReceivedCallback = Callback;
 }
 
 void SharedMemQueue::ManualLock()
@@ -163,6 +182,11 @@ bool SharedMemQueue::PushMessage(MemMessage Msg,bool ManualLocking)
 	
     m_OutHeader->m_OffsetToEndOfLastMessage += Msg.m_DataSize + sizeof(DWORD);
 	m_OutHeader->m_MessageCount++;
+
+	if (m_Type == Mode::Server)
+		m_ServerToClientSignal.Signal();
+	else
+		m_ClientToServerSignal.Signal();
 	return true;
 }
 
@@ -227,8 +251,24 @@ bool SharedMemQueue::IsMessageAvailable()
 
 void SharedMemQueue::WaitForMessage()
 {
-	while (!IsMessageAvailable())
+	if (m_Type == Mode::Server)
 	{
-		Sleep(20);
+		m_ClientToServerSignal.Wait();
+		m_ClientToServerSignal.Reset();
+	}else {
+		m_ServerToClientSignal.Wait();
+		m_ServerToClientSignal.Reset();
 	}
+	if(m_ReceivedCallback)
+		m_ReceivedCallback();
+}
+
+DWORD WINAPI MsgThread(LPVOID lparam)
+{
+	do 
+	{
+		SharedMemQueue* pThis = (SharedMemQueue*)lparam;
+		if(pThis)
+			pThis->WaitForMessage();
+	} while (1);
 }

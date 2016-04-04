@@ -47,5 +47,8 @@
     <ClInclude Include="..\Common\Utilities.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
+    <ClInclude Include="..\Common\IPC\SharedSignal.h">
+      <Filter>Header Files\Common\IPC</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
