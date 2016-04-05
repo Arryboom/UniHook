@@ -87,7 +87,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>../PolyHook/Capstone/msvc/x64/Release;$(LibraryPath)</LibraryPath>
+    <LibraryPath>../PolyHook/Capstone/msvc/x64/Release;../IntelSEAPI/build_win/bin;$(LibraryPath)</LibraryPath>
     <IncludePath>$(ProjectDir)..\IntelSEAPI\ittnotify\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

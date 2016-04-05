@@ -140,9 +140,9 @@ volatile int WriteRET(BYTE* Address)
 
 void HookFunctionAtRuntime(BYTE* SubRoutineAddress, HookMethod Method)
 {
-	BYTE* Callback = new BYTE[146];
+	BYTE* Callback = new BYTE[200];
 	DWORD Old;
-	VirtualProtect(Callback, 146, PAGE_EXECUTE_READWRITE, &Old);
+	VirtualProtect(Callback, 200, PAGE_EXECUTE_READWRITE, &Old);
 
 	std::shared_ptr<PLH::IHook> Hook;
 	DWORD64 Original;
@@ -159,9 +159,9 @@ void HookFunctionAtRuntime(BYTE* SubRoutineAddress, HookMethod Method)
 	}
 	else if (Method == HookMethod::INT3_BP) {
 		Hook.reset(new PLH::VEHHook, [&](PLH::VEHHook* Hook) {
-			Hook->UnHook();
-			delete Hook;
-			delete[] Callback;
+			//Hook->UnHook();
+			//delete Hook;
+			//delete[] Callback;
 		});
 		((PLH::VEHHook*)Hook.get())->SetupHook((BYTE*)SubRoutineAddress, (BYTE*)Callback, PLH::VEHHook::VEHMethod::INT3_BP);
 		Hook->Hook();
