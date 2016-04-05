@@ -149,9 +149,9 @@ void HookFunctionAtRuntime(BYTE* SubRoutineAddress, HookMethod Method)
 	if (Method == HookMethod::INLINE)
 	{
 		Hook.reset(new PLH::Detour, [&](PLH::Detour* Hook) {
-			Hook->UnHook();
-			delete Hook;
-			delete[] Callback;
+			//Hook->UnHook();
+			//delete Hook;
+			//delete[] Callback;
 		});
 		((PLH::Detour*)Hook.get())->SetupHook((BYTE*)SubRoutineAddress, (BYTE*)Callback);
 		Hook->Hook();
