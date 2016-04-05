@@ -108,7 +108,7 @@ void MainWindow::AddSubRoutine( QString address )
 	ui->tblRoutines->setItem( row, 0, pIconItem );
 	ui->tblRoutines->setItem( row, 1, new QTableWidgetItem( address ) );
 
-	/*
+
 	bool converted;
 	uintptr_t numeric = address.toULongLong( &converted, 16 );
 
@@ -124,7 +124,7 @@ void MainWindow::AddSubRoutine( QString address )
 	} else {
 		qDebug( ) << "[!] failed to convert address";
 	}
-	*/
+
 
 	ui->tblRoutines->horizontalHeader( )->setSectionResizeMode( QHeaderView::ResizeToContents );
 	ui->tblRoutines->verticalHeader( )->setSectionResizeMode( QHeaderView::ResizeToContents );
@@ -243,7 +243,7 @@ void MainWindow::HookSelectedRoutine( )
 	if ( !pClipboard )
 		return;
 
-	QString message = "HookAtAddr|" + ui->tblRoutines->item( pSelectedItem->row( ), 1 )->text( );
+    QString message = "HookAtAddr[:." + ui->tblRoutines->item( pSelectedItem->row( ), 1 )->text( );
 	this->m_pIPCServer->PushMessage( MemMessage( message.toStdString( ) ) );
 }
 
