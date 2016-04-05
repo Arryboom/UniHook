@@ -51,14 +51,4 @@ private:
 };
 
 
-class MessageThread : public QThread
-{
-public:
-	explicit MessageThread( MainWindow* pMainWindow );
-	void run( );
-private:
-	MainWindow* m_pMainWindow;
-};
-
-
 #endif // MAINWINDOW_H

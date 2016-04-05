@@ -25,8 +25,26 @@
 #pragma comment( lib, "user32.lib" )
 #pragma comment( lib, "advapi32.lib" )
 
+
+MainWindow* WindInst;
+void MsgCallback()
+{
+    MemMessage message;
+    while (WindInst->m_pIPCServer->PopMessage( message ) )
+    {
+        QString data = QString::fromUtf8( reinterpret_cast<const char*>( &message.m_Data[0] ) );
+        QStringList list = data.split( "|" );
+
+        if ( list.at( 0 ) == "0" )
+        {
+            WindInst->AddSubRoutine( list.at( 2 ) );
+        }
+    }
+}
+
 MainWindow::MainWindow( QWidget* pParent ) : QMainWindow( pParent ), ui( new Ui::MainWindow )
 {
+    WindInst = this;
 	ui->setupUi( this );
 
 	m_pStatusLabel = new QLabel( this );
@@ -50,9 +68,7 @@ MainWindow::MainWindow( QWidget* pParent ) : QMainWindow( pParent ), ui( new Ui:
 	UpdateStatusBar( );
 
 	this->m_pIPCServer = new SharedMemQueue( "Local\\UniHook_IPC", 100000, SharedMemQueue::Mode::Server );
-
-	MessageThread* pMessageThread = new MessageThread( this );
-	pMessageThread->start( );
+    this->m_pIPCServer->SetCallback(MsgCallback);
 }
 
 MainWindow::~MainWindow( )
@@ -155,16 +171,8 @@ void MainWindow::on_action_SelectProcess_triggered( )
 		UpdateMemoryList( );
 		UpdateImageSections( );
 		UpdateStatusBar( );
-
-        this->m_pIPCServer->WaitForMessage();
-        MemMessage Msg;
-        if(m_pIPCServer->PopMessage(Msg))
-            qDebug( ) << "[+] IPC Connected Succesfully";
-        else
-            qDebug( ) << "[+] IPC Connection Failed";
 	}
 }
-
 
 void MainWindow::on_action_Find_triggered( )
 {
@@ -406,26 +414,5 @@ MemoryRegion* MainWindow::FindMemoryRegionByAddress( uintptr_t address )
 	return NULL;
 }
 
-MessageThread::MessageThread( MainWindow* pMainWindow )
-{
-	this->m_pMainWindow = pMainWindow;
-}
 
-void MessageThread::run( )
-{
-	qDebug( ) << "[+] MessageThread::run( )";
 
-	this->m_pMainWindow->m_pIPCServer->WaitForMessage( );
-	MemMessage message;
-
-	while ( this->m_pMainWindow->m_pIPCServer->PopMessage( message ) )
-	{
-		QString data = QString::fromUtf8( reinterpret_cast<const char*>( &message.m_Data[0] ) );
-		QStringList list = data.split( "|" );
-
-		if ( list.at( 0 ) == "0" )
-		{
-			this->m_pMainWindow->AddSubRoutine( list.at( 2 ) );
-		}
-	}
-}
