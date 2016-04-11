@@ -35,9 +35,13 @@ void MsgCallback()
         QString data = QString::fromUtf8( reinterpret_cast<const char*>( &message.m_Data[0] ) );
         QStringList list = data.split( "|" );
 
-        if ( list.at( 0 ) == "0" )
+        if ( list.at( 0 ) == "SubFound" && list.size()==4)
         {
             WindInst->AddSubRoutine( list.at( 2 ) );
+        }
+        if(list.at(0) == "RegDump")
+        {
+
         }
     }
 }

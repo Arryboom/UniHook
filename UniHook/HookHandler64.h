@@ -2,7 +2,21 @@
 typedef void(__stdcall* tGeneric)();
 __declspec(noinline) void PrologInterupt(void* pOriginal)
 {
-	cPrint("[+] In Prolog, pOriginal:[%I64X]\n",pOriginal);
+	//cPrint("[+] In Prolog, pOriginal:[%I64X]\n",pOriginal);
+	CONTEXT Ctx;
+	RtlCaptureContext(&Ctx);
+
+	char Buff[1048];
+	sprintf_s(Buff, "RegDump"
+		"|%p|%p|%p|%p|%p|%p|%p"
+		"|%p|%p|%p|%p|%p|%p|%p"
+		"|%p|%p|%p|%p",
+		pOriginal, Ctx.R8, Ctx.R9, Ctx.R10, Ctx.R11, Ctx.R12, Ctx.R13,
+		Ctx.R14, Ctx.R15, Ctx.Rax, Ctx.Rbp, Ctx.Rbx, Ctx.Rcx, Ctx.Rdi,
+		Ctx.Rdx, Ctx.Rip, Ctx.Rsi, Ctx.Rsp);
+
+	cPrint("%s\n", Buff);
+	MemClient->PushMessage(std::string(Buff));
 }
 
 __declspec(noinline) void PostlogInterupt(PLH::IHook* pHook)

@@ -17,6 +17,8 @@
 InstructionSearcher m_InsSearcher;
 std::vector<std::shared_ptr<PLH::IHook>> m_Hooks;
 std::vector<SearchResult> Results;
+std::unique_ptr<SharedMemQueue> MemClient;
+PDBReader m_PDBReader;
 
 enum class HookMethod
 {
@@ -31,8 +33,7 @@ enum class HookMethod
 #define StrToAddress(x) strtol(x,NULL,16)
 	#include "HookHandler86.h"
 #endif
-PDBReader m_PDBReader;
-std::unique_ptr<SharedMemQueue> MemClient;
+
 __declspec(noinline) volatile void FindSubRoutines()
 {
 	HANDLE hMod = GetModuleHandle(NULL); //Get Current Process (Base Address)
@@ -75,7 +76,7 @@ void PrintFoundSubs()
 			//cPrint("[+] Found Subroutine [%d] at: [%p] [%s]\n", j, SubRoutine.GetCallDestination(), ResolvedName.c_str());
 
 			//MemMessage Msg("[%d] at: [%p] [%s]", j, SubRoutine.GetCallDestination(), ResolvedName.c_str());
-			MemMessage Msg("0|%d|%I64X|%s", j, SubRoutine.GetCallDestination(), ResolvedName.c_str());
+			MemMessage Msg("SubFound|%d|%I64X|%s", j, SubRoutine.GetCallDestination(), ResolvedName.c_str());
 
 			MemClient->PushMessage(Msg, true);
 		}
@@ -83,12 +84,12 @@ void PrintFoundSubs()
 			//cPrint("[+] Found Subroutine [%d] at: [%p] [%s]\n", j, SubRoutine.GetCallDestination(), " ");
 
 			//MemMessage Msg("[%d] at: [%p] [%s]", j, SubRoutine.GetCallDestination(), " ");
-			MemMessage Msg("0|%d|%I64X|%s", j, SubRoutine.GetCallDestination(), " ");
+			MemMessage Msg("SubFound|%d|%I64X|%s", j, SubRoutine.GetCallDestination(), " ");
 			MemClient->PushMessage(Msg, true);
 		}
 	}
 	cPrint("[+] Found: %d Subroutines\n", Results.size());
-	MemMessage Msg("99|found %d Subroutines", Results.size());
+	MemMessage Msg("SubCount|found %d Subroutines", Results.size());
 	MemClient->PushMessage(Msg, true);
 }
 
