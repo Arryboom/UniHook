@@ -20,5 +20,6 @@
         <file>Images/settings.png</file>
         <file>Images/wrench.png</file>
         <file>Images/small.ico</file>
+        <file>Images/zoom.png</file>
     </qresource>
 </RCC>

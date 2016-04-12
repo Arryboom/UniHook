@@ -40,7 +40,7 @@ private slots:
 	void on_tblRoutines_customContextMenuRequested( const QPoint& pos );
 	void CopySelectedAddress( );
 	void HookSelectedRoutine( );
-
+    void ViewSelectedRoutine( );
 private:
 	Ui::MainWindow* ui;
 

@@ -4,6 +4,7 @@
 
 #include "DlgFind.h"
 #include "DlgProcessList.h"
+#include "DlgViewRegister.h"
 
 #include <QtGui>
 #include <QtCore>
@@ -63,7 +64,7 @@ MainWindow::MainWindow( QWidget* pParent ) : QMainWindow( pParent ), ui( new Ui:
 	ui->tblRoutines->horizontalHeader( )->setDefaultAlignment( Qt::AlignLeft );
 	ui->tblRoutines->verticalHeader( )->setDefaultSectionSize( ui->tblRoutines->verticalHeader( )->fontMetrics( ).height( ) + 2 );
 
-	ui->tblRoutines->setColumnCount( 4 );
+    ui->tblRoutines->setColumnCount( 4 );
 	ui->tblRoutines->setHorizontalHeaderItem( 0, new QTableWidgetItem( "Icon" ) );
 	ui->tblRoutines->setHorizontalHeaderItem( 1, new QTableWidgetItem( "Address" ) );
 	ui->tblRoutines->setHorizontalHeaderItem( 2, new QTableWidgetItem( "Module" ) );
@@ -215,6 +216,11 @@ void MainWindow::on_tblRoutines_customContextMenuRequested( const QPoint& pos )
 	menu->addAction( actHookRoutine );
 	connect( actHookRoutine, SIGNAL( triggered( ) ), this, SLOT( HookSelectedRoutine( ) ) );
 
+    QAction* actViewReg = new QAction( QIcon( ":/Images/Images/zoom.png" ), "View Registers", this );
+    actViewReg->setIconVisibleInMenu( true );
+    menu->addAction( actViewReg );
+    connect( actViewReg, SIGNAL( triggered( ) ), this, SLOT( ViewSelectedRoutine() ) );
+
 	menu->popup( ui->tblRoutines->viewport( )->mapToGlobal( pos ) );
 }
 
@@ -249,6 +255,20 @@ void MainWindow::HookSelectedRoutine( )
 
     QString message = "HookAtAddr[:." + ui->tblRoutines->item( pSelectedItem->row( ), 1 )->text( );
 	this->m_pIPCServer->PushMessage( MemMessage( message.toStdString( ) ) );
+}
+
+void MainWindow::ViewSelectedRoutine()
+{
+    qDebug( ) << "[+] MainWindow::ViewSelectedRoutine( )";
+
+    QTableWidgetItem* pSelectedItem = ui->tblRoutines->selectedItems( ).at( 0 );
+
+    if ( !pSelectedItem )
+        return;
+
+    DlgViewRegister RegWindow;
+    RegWindow.setModal(true);
+    RegWindow.exec();
 }
 
 void MainWindow::UpdateMemoryList( )
