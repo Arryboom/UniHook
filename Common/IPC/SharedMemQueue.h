@@ -169,8 +169,8 @@ bool SharedMemQueue::PushMessage(MemMessage Msg,bool ManualLocking)
 
     //sizeof(DWORD) = sizeof(MemMessage::m_DataSize), Qt doesn't like that syntax
 	//Make sure we don't overrun our buffer
-    intptr_t Delta = (WriteLocation + Msg.m_DataSize + sizeof(DWORD)) - m_Buffer;
-	if (Delta >= m_BufSize)
+    intptr_t Delta = (WriteLocation + Msg.m_DataSize + sizeof(DWORD)) - ((BYTE*)m_OutHeader);
+	if (Delta >= (m_BufSize/2))
 		return false;
 
 	//Write Data
