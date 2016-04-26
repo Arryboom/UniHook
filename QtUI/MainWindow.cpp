@@ -4,7 +4,6 @@
 
 #include "DlgFind.h"
 #include "DlgProcessList.h"
-#include "DlgViewRegister.h"
 
 #include <QtGui>
 #include <QtCore>
@@ -14,7 +13,6 @@
 #include <QTimer>
 #include <QDebug>
 #include <QStringList>
-#include <QVector>
 
 #include <windows.h>
 #include <psapi.h>
@@ -27,7 +25,6 @@
 #pragma comment( lib, "user32.lib" )
 #pragma comment( lib, "advapi32.lib" )
 
-QVector<DlgViewRegister> m_RegisterViews;
 MainWindow* WindInst;
 void MsgCallback()
 {
@@ -269,9 +266,7 @@ void MainWindow::ViewSelectedRoutine()
 
     QString Addr = ui->tblRoutines->item( pSelectedItem->row( ), 1 )->text( );
 
-    DlgViewRegister RegWindow(Addr.toULongLong());
-    RegWindow.setModal(true);
-    RegWindow.exec();
+
 }
 
 void MainWindow::UpdateMemoryList( )

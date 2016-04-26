@@ -16,8 +16,7 @@ SOURCES += main.cpp\
         MainWindow.cpp \
     DlgProcessList.cpp \
     DlgMemory.cpp \
-    DlgFind.cpp \
-    DlgViewRegister.cpp
+    DlgFind.cpp
 
 HEADERS  += MainWindow.h \
     DlgProcessList.h \
@@ -27,8 +26,7 @@ HEADERS  += MainWindow.h \
     ../Common/IPC/SharedMemQueue.h \
     ../Common/IPC/SharedMemMutex.h \
     injector.h \
-    dlgregisterview.h \
-    DlgViewRegister.h
+    dlgregisterview.h
 
 FORMS    += MainWindow.ui \
     DlgProcessList.ui \
