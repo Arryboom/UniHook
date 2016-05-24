@@ -19,8 +19,8 @@ This demo has 3 core parts
   * Shared memory synchronization is done through the Shared Memory Mutex object, which uses a WINAPI named mutex, this object can be managed by c++11's locking wrappers such as lock_guard
 
 #LIMITATIONS
-1. No XMM or SIMD instructions in when compiling in x64, my variation of pusha and popa doesn't restore these.
-2. Possible stack alignment issues
+1. No XMM registers or SIMD instructions can be used when compiling in x64, my variation of pusha and popa doesn't restore these.
+2. Possible stack alignment issues may exist when the original function is executed after the first interupt 
 3. A heap corruption bug is floating around somewhere
 
 #LICENSE
