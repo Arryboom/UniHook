@@ -1,6 +1,6 @@
 # UniHook
 
-*Pre-Alpha Source Code*. This is an example project on how to use PolyHook to intercept ANY arbitrary function, without knowing it's typedef. It hooks the specified function and calls an "Interupt" function before and after executing the original hooked function. This is useful for cases where someone may wish to time how long a function takes to execute. This relies both on PolyHook,and it's dependancy Capstone (the modified branch in my GitHub).
+*Pre-Alpha Source Code, seriously there are issues!! THIS IS A POC*. This is an example project on how to use PolyHook to intercept ANY arbitrary function, without knowing it's typedef. It hooks the specified function and calls an "Interupt" function before and after executing the original hooked function. This is useful for cases where someone may wish to time how long a function takes to execute. This relies both on PolyHook,and it's dependancy Capstone (the modified branch in my GitHub).
 
 #How it works:
 
@@ -17,6 +17,11 @@ This demo has 3 core parts
 2. UniHook dll which uses polyhook, and then creates runtime callbacks
 3. UniHook loader which injects the UniHook dll, and sends it commands via a shared memory queue/stack system
   * Shared memory synchronization is done through the Shared Memory Mutex object, which uses a WINAPI named mutex, this object can be managed by c++11's locking wrappers such as lock_guard
+
+#LIMITATIONS
+1. No XMM or SIMD instructions in when compiling in x64, my variation of pusha and popa doesn't restore these.
+2. Possible stack alignment issues
+3. A heap corruption bug is floating around somewhere
 
 #LICENSE
 MIT
